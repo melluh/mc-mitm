@@ -2,10 +2,8 @@ package com.melluh.mcmitm.protocol.packet;
 
 import com.melluh.mcmitm.protocol.PacketType;
 import com.melluh.mcmitm.protocol.field.PacketField;
-import com.melluh.mcmitm.protocol.field.PacketFieldList;
+import com.melluh.mcmitm.protocol.field.PacketFieldCondition;
 import io.netty.buffer.ByteBuf;
-
-import java.util.List;
 
 public class Packet {
 
@@ -17,16 +15,19 @@ public class Packet {
     }
 
     public void write(ByteBuf buf) {
-        List<PacketField> fields = type.getFieldList().getFields();
-        for(int i = 0; i < fields.size(); i++) {
-            PacketField field = fields.get(i);
-            field.write(buf, data.getValue(i));
+        for (PacketField field : type.getFields()) {
+            field.write(buf, data.getValue(field.getName()));
         }
     }
 
     public void read(ByteBuf buf) {
-        PacketFieldList fieldList = type.getFieldList();
-        fieldList.getFields().forEach(field -> data.addValue(field.read(buf)));
+        for(PacketField field : type.getFields()) {
+            PacketFieldCondition condition = field.getCondition();
+            if(condition != null && !condition.evaluate(data))
+                continue;
+
+            data.addValue(field.getName(), field.read(buf));
+        }
     }
 
     public PacketType getType() {

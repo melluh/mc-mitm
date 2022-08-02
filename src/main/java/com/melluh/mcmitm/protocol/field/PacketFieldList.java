@@ -4,6 +4,7 @@ import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PacketFieldList {
@@ -25,7 +26,7 @@ public class PacketFieldList {
     }
 
     public List<PacketField> getFields() {
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     public static PacketFieldList create(JsonArray json, PacketFieldList parent) {

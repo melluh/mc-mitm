@@ -2,7 +2,10 @@ package com.melluh.mcmitm.protocol;
 
 import com.grack.nanojson.JsonObject;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
+import com.melluh.mcmitm.protocol.field.PacketField;
 import com.melluh.mcmitm.protocol.field.PacketFieldList;
+
+import java.util.List;
 
 public class PacketType {
 
@@ -30,8 +33,8 @@ public class PacketType {
         return direction;
     }
 
-    public PacketFieldList getFieldList() {
-        return fieldList;
+    public List<PacketField> getFields() {
+        return fieldList.getFields();
     }
 
     public static PacketType create(JsonObject json) {

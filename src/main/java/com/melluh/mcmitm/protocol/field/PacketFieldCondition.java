@@ -2,20 +2,50 @@ package com.melluh.mcmitm.protocol.field;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
+import com.melluh.mcmitm.protocol.packet.PacketData;
+import org.tinylog.Logger;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class PacketFieldCondition {
 
+    private final String fieldName;
     private final Mode mode;
     private final List<Object> values;
 
-    public PacketFieldCondition(Mode mode, List<Object> values) {
+    public PacketFieldCondition(String fieldName, Mode mode, List<Object> values) {
+        this.fieldName = fieldName;
         this.mode = mode;
         this.values = values;
     }
 
-    public boolean evaluate() {
+    public boolean evaluate(PacketData data) {
+        if(fieldName.startsWith("../")) {
+            if(!data.hasParent())
+                throw new IllegalStateException("Data does not have parent");
+            return this.evaluate(data.getParent());
+        }
+
+        Object value = data.getValue(fieldName);
+        if(value == null)
+            return false;
+
+        if(mode == Mode.EQUALS) {
+            return values.contains(value.toString());
+        }
+
+        if(mode == Mode.NOT_EQUAL) {
+            return !values.contains(value.toString());
+        }
+
+        if(mode == Mode.BITMASK) {
+            int intVal = (int) value;
+            return values.stream()
+                    .map(val -> Integer.decode((String) val))
+                    .anyMatch(mask -> (intVal & mask) > 0);
+        }
+
         return false;
     }
 
@@ -25,9 +55,9 @@ public class PacketFieldCondition {
 
     public static PacketFieldCondition create(JsonObject json) {
         for(Mode mode : Mode.values()) {
-            String fieldName = mode.name().toLowerCase();
-            if(json.has(fieldName))
-                return new PacketFieldCondition(mode, getValues(json, fieldName));
+            String modeName = mode.name().toLowerCase();
+            if(json.has(modeName))
+                return new PacketFieldCondition(json.getString("field"), mode, getValues(json, modeName));
         }
 
         throw new IllegalStateException("No recognized condition fields found");

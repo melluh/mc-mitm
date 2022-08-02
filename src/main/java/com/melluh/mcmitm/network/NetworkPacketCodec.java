@@ -26,7 +26,7 @@ public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf buf) {
+    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf buf) throws Exception {
         int initial = buf.writerIndex();
         try {
             int packetId = packet.getType().getId();
@@ -39,7 +39,7 @@ public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
         try {
             int packetId = NetworkUtils.readVarInt(buf);
 
