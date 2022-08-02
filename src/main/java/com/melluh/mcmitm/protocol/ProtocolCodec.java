@@ -43,6 +43,13 @@ public class ProtocolCodec {
             }
         }
 
+        public PacketType getPacket(PacketDirection direction, int id) {
+            return switch(direction) {
+                case CLIENTBOUND -> clientboundPackets.get(id);
+                case SERVERBOUND -> serverboundPackets.get(id);
+            };
+        }
+
         public PacketType getClientboundPacket(int id) {
             return clientboundPackets.get(id);
         }
@@ -93,9 +100,19 @@ public class ProtocolCodec {
 
    public enum PacketDirection {
 
-        CLIENTBOUND, SERVERBOUND;
+        CLIENTBOUND("C->S"), SERVERBOUND("S->C");
 
-        public static PacketDirection parse(String str) {
+        private final String name;
+
+        PacketDirection(String name) {
+            this.name = name;
+        }
+
+       public String getName() {
+           return name;
+       }
+
+       public static PacketDirection parse(String str) {
             if(str.equals("server"))
                 return SERVERBOUND;
             if(str.equals("client"))

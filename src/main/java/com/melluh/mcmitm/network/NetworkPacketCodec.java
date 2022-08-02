@@ -1,7 +1,8 @@
 package com.melluh.mcmitm.network;
 
 import com.melluh.mcmitm.MinecraftProxy;
-import com.melluh.mcmitm.protocol.field.PacketField;
+import com.melluh.mcmitm.Session;
+import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.protocol.PacketType;
 import com.melluh.mcmitm.protocol.ProtocolCodec.ProtocolStateCodec;
@@ -12,16 +13,20 @@ import org.tinylog.Logger;
 
 import java.util.List;
 
-public class NetworkPacketDecoder extends ByteToMessageCodec<Packet> {
+public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
 
     private final MinecraftProxy proxy;
+    private final Session session;
+    private final PacketDirection direction;
 
-    public NetworkPacketDecoder(MinecraftProxy proxy) {
+    public NetworkPacketCodec(MinecraftProxy proxy, Session session, PacketDirection direction) {
         this.proxy = proxy;
+        this.session = session;
+        this.direction = direction;
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf buf) throws Exception {
+    protected void encode(ChannelHandlerContext ctx, Packet packet, ByteBuf buf) {
         int initial = buf.writerIndex();
         try {
             int packetId = packet.getType().getId();
@@ -34,28 +39,20 @@ public class NetworkPacketDecoder extends ByteToMessageCodec<Packet> {
     }
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf buf, List<Object> out) {
         try {
             int packetId = NetworkUtils.readVarInt(buf);
 
-            ProtocolStateCodec codec = proxy.getCodec().getStateCodec(proxy.getState());
-            PacketType packetType = codec.getServerboundPacket(packetId); // TODO: this needs to work in both directions
+            ProtocolStateCodec codec = proxy.getCodec().getStateCodec(session.getState());
+            PacketType packetType = codec.getPacket(direction, packetId);
             if(packetType == null)
-                throw new IllegalStateException("Unknown packet type: 0x" + Integer.toHexString(packetId));
+                throw new IllegalStateException("Unknown packet type: 0x" + Integer.toHexString(packetId) + " (" + direction.getName() + ", " + session.getState().name() + ")");
 
             Packet packet = new Packet(packetType);
             packet.read(buf);
 
             if(buf.readableBytes() > 0)
-                throw new IllegalStateException("Packet " + packetType.getName() + " not fully read (readable: " + buf.readableBytes() + ")");
-
-            Logger.info(packet.getType().getName());
-
-            List<PacketField> packetFields = packet.getType().getFieldList().getFields();
-            for(int i = 0; i < packetFields.size(); i++) {
-                PacketField field = packetFields.get(i);
-                Logger.info("\t{} ({}): {}", field.getName(), field.getType().name(), packet.getData().getValue(i));
-            }
+                throw new IllegalStateException("Packet " + packetType.getName() + " not fully read (readable: " + buf.readableBytes() + ", state: " + session.getState().name() + ")");
 
             out.add(packet);
         } catch (Throwable throwable) {

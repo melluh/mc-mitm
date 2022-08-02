@@ -54,7 +54,8 @@ public abstract class PacketField {
         BYTE(ByteField::new),
         FLOAT(FloatField::new),
         DOUBLE(DoubleField::new),
-        BOOLEAN(BooleanField::new);
+        BOOLEAN(BooleanField::new),
+        BYTE_ARRAY(ByteArrayField::new);
 
         private final Function<JsonObject, PacketField> createFunction;
 

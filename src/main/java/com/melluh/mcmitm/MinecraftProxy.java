@@ -1,13 +1,15 @@
 package com.melluh.mcmitm;
 
 import com.grack.nanojson.JsonObject;
-import com.melluh.mcmitm.network.NetworkPacketDecoder;
+import com.melluh.mcmitm.network.NetworkPacketCodec;
+import com.melluh.mcmitm.network.NetworkPacketHandler;
 import com.melluh.mcmitm.network.NetworkPacketSizer;
 import com.melluh.mcmitm.protocol.ProtocolCodec;
-import com.melluh.mcmitm.protocol.ProtocolState;
+import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
 import com.melluh.mcmitm.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelId;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
@@ -16,6 +18,11 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.tinylog.Logger;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class MinecraftProxy {
 
     private final int listenPort;
@@ -23,7 +30,7 @@ public class MinecraftProxy {
     private final int targetPort;
 
     private ProtocolCodec codec;
-    private ProtocolState state = ProtocolState.HANDSHAKING;
+    private final List<Session> sessions = new ArrayList<>();
 
     public MinecraftProxy(int listenPort, String targetHost, int targetPort) {
         this.listenPort = listenPort;
@@ -61,11 +68,16 @@ public class MinecraftProxy {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
-                        protected void initChannel(SocketChannel ch) throws Exception {
-                            Logger.info("Channel initialized: {}", ch.localAddress().getAddress().getHostAddress());
+                        protected void initChannel(SocketChannel ch) {
+                            Session session = new Session(ch);
+                            sessions.add(session);
+
                             ch.pipeline()
                                     .addLast("sizer", new NetworkPacketSizer())
-                                    .addLast("decoder", new NetworkPacketDecoder(MinecraftProxy.this));
+                                    .addLast("decoder", new NetworkPacketCodec(MinecraftProxy.this, session, PacketDirection.SERVERBOUND))
+                                    .addLast("handler", new NetworkPacketHandler(MinecraftProxy.this, session));
+
+                            Logger.info("Session initialized: {}", ch.localAddress().getAddress().getHostAddress());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
@@ -81,14 +93,6 @@ public class MinecraftProxy {
 
     public ProtocolCodec getCodec() {
         return codec;
-    }
-
-    public void setState(ProtocolState state) {
-        this.state = state;
-    }
-
-    public ProtocolState getState() {
-        return state;
     }
 
 }
