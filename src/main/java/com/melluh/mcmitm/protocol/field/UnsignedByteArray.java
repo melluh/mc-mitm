@@ -5,17 +5,18 @@ import com.melluh.mcmitm.network.NetworkUtils;
 import com.melluh.mcmitm.protocol.packet.PacketData;
 import io.netty.buffer.ByteBuf;
 
-public class ByteArrayField extends PacketField {
+public class UnsignedByteArray extends PacketField {
 
-    public ByteArrayField(JsonObject json) {
-        super(FieldType.BYTE_ARRAY, json);
+    public UnsignedByteArray(JsonObject json) {
+        super(FieldType.UNSIGNED_BYTE_ARRAY, json);
     }
 
     @Override
     public Object read(ByteBuf buf, PacketData parentData) {
         int length = NetworkUtils.readVarInt(buf);
-        byte[] data = new byte[length];
-        buf.readBytes(data);
+        short[] data = new short[length];
+        for(int i = 0; i < length; i++)
+            data[i] = buf.readUnsignedByte();
         return data;
     }
 

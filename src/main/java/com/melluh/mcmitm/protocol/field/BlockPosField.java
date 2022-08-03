@@ -1,24 +1,24 @@
 package com.melluh.mcmitm.protocol.field;
 
 import com.grack.nanojson.JsonObject;
-import com.melluh.mcmitm.network.NetworkUtils;
 import com.melluh.mcmitm.protocol.packet.PacketData;
+import com.melluh.mcmitm.util.BlockPos;
 import io.netty.buffer.ByteBuf;
 
-public class VarLongField extends PacketField {
+public class BlockPosField extends PacketField {
 
-    public VarLongField(JsonObject json) {
-        super(FieldType.VARLONG, json);
+    public BlockPosField(JsonObject json) {
+        super(FieldType.BLOCKPOS, json);
     }
 
     @Override
     public Object read(ByteBuf buf, PacketData parentData) {
-        return NetworkUtils.readVarLong(buf);
+        return BlockPos.of(buf.readLong());
     }
 
     @Override
     public void write(ByteBuf buf, Object data) {
-        NetworkUtils.writeVarLong(buf, (long) data);
+        buf.writeLong(((BlockPos) data).asLong());
     }
 
 }

@@ -1,8 +1,16 @@
 package com.melluh.mcmitm.network;
 
+import dev.dewy.nbt.Nbt;
+import dev.dewy.nbt.tags.collection.CompoundTag;
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class NetworkUtils {
 
@@ -78,6 +86,30 @@ public class NetworkUtils {
         byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
         writeVarInt(buf, bytes.length);
         buf.writeBytes(bytes);
+    }
+
+    public static UUID readUuid(ByteBuf buf) {
+        return new UUID(buf.readLong(), buf.readLong());
+    }
+
+    public static void writeUuid(ByteBuf buf, UUID uuid) {
+        buf.writeLong(uuid.getMostSignificantBits());
+        buf.writeLong(uuid.getLeastSignificantBits());
+    }
+
+    private static final Nbt NBT = new Nbt();
+
+    public static CompoundTag readNbt(ByteBuf buf) throws IOException {
+        if(buf.readByte() == 0)
+            return new CompoundTag();
+        buf.readerIndex(buf.readerIndex() - 1);
+        DataInputStream inputStream = new DataInputStream(new ByteBufInputStream(buf));
+        return NBT.fromStream(inputStream);
+    }
+
+    public static void writeNbt(ByteBuf buf, CompoundTag tag) throws IOException {
+        DataOutputStream outputStream = new DataOutputStream(new ByteBufOutputStream(buf));
+        NBT.toStream(tag, outputStream);
     }
 
 }

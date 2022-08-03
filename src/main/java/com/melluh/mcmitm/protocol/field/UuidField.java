@@ -5,20 +5,22 @@ import com.melluh.mcmitm.network.NetworkUtils;
 import com.melluh.mcmitm.protocol.packet.PacketData;
 import io.netty.buffer.ByteBuf;
 
-public class VarLongField extends PacketField {
+import java.util.UUID;
 
-    public VarLongField(JsonObject json) {
-        super(FieldType.VARLONG, json);
+public class UuidField extends PacketField {
+
+    public UuidField(JsonObject json) {
+        super(FieldType.UUID, json);
     }
 
     @Override
     public Object read(ByteBuf buf, PacketData parentData) {
-        return NetworkUtils.readVarLong(buf);
+        return NetworkUtils.readUuid(buf);
     }
 
     @Override
     public void write(ByteBuf buf, Object data) {
-        NetworkUtils.writeVarLong(buf, (long) data);
+        NetworkUtils.writeUuid(buf, (UUID) data);
     }
 
 }

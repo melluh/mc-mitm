@@ -1,6 +1,7 @@
 package com.melluh.mcmitm.protocol.field;
 
 import com.grack.nanojson.JsonObject;
+import com.melluh.mcmitm.protocol.packet.PacketData;
 import io.netty.buffer.ByteBuf;
 
 public class IntField extends PacketField {
@@ -10,13 +11,13 @@ public class IntField extends PacketField {
     }
 
     @Override
-    public Object read(ByteBuf buf) {
+    public Object read(ByteBuf buf, PacketData parentData) {
         return buf.readInt();
     }
 
     @Override
     public void write(ByteBuf buf, Object data) {
-        buf.writeInt((Integer) data);
+        buf.writeInt((int) data);
     }
 
 }

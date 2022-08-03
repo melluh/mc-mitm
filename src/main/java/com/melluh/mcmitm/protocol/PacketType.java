@@ -33,6 +33,10 @@ public class PacketType {
         return direction;
     }
 
+    public PacketFieldList getFieldList() {
+        return fieldList;
+    }
+
     public List<PacketField> getFields() {
         return fieldList.getFields();
     }
@@ -41,7 +45,7 @@ public class PacketType {
         int id = Integer.decode(json.getString("id"));
         String name = json.getString("name");
         PacketDirection direction = PacketDirection.parse(json.getString("to"));
-        PacketFieldList fieldList = PacketFieldList.create(json.getArray("fields"), null);
+        PacketFieldList fieldList = PacketFieldList.create(json.getArray("fields"));
         return new PacketType(id, name, direction, fieldList);
     }
 

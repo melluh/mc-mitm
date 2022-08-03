@@ -1,8 +1,10 @@
 package com.melluh.mcmitm.protocol.field;
 
 import com.grack.nanojson.JsonObject;
+import com.melluh.mcmitm.protocol.packet.PacketData;
 import io.netty.buffer.ByteBuf;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 public abstract class PacketField {
@@ -19,8 +21,8 @@ public abstract class PacketField {
         this.condition = json.has("if") ? PacketFieldCondition.create(json.getObject("if")) : null;
     }
 
-    public abstract Object read(ByteBuf buf);
-    public abstract void write(ByteBuf buf, Object data);
+    public abstract Object read(ByteBuf buf, PacketData parentData) throws IOException;
+    public abstract void write(ByteBuf buf, Object data) throws IOException;
 
     public FieldType getType() {
         return type;
@@ -52,10 +54,18 @@ public abstract class PacketField {
         STRING(StringField::new),
         SHORT(ShortField::new),
         BYTE(ByteField::new),
+        UBYTE(UnsignedByteField::new),
         FLOAT(FloatField::new),
         DOUBLE(DoubleField::new),
         BOOLEAN(BooleanField::new),
-        BYTE_ARRAY(ByteArrayField::new);
+        BYTE_ARRAY(ByteArrayField::new),
+        UNSIGNED_BYTE_ARRAY(UnsignedByteArray::new),
+        UUID(UuidField::new),
+        BLOCKPOS(BlockPosField::new),
+        COLLECTION(CollectionField::new),
+        BYTES(BytesField::new),
+        NBT(NbtField::new),
+        ITEM(ItemField::new);
 
         private final Function<JsonObject, PacketField> createFunction;
 

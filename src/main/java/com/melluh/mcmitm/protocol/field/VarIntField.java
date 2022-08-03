@@ -2,6 +2,7 @@ package com.melluh.mcmitm.protocol.field;
 
 import com.grack.nanojson.JsonObject;
 import com.melluh.mcmitm.network.NetworkUtils;
+import com.melluh.mcmitm.protocol.packet.PacketData;
 import io.netty.buffer.ByteBuf;
 
 public class VarIntField extends PacketField {
@@ -11,13 +12,13 @@ public class VarIntField extends PacketField {
     }
 
     @Override
-    public Object read(ByteBuf buf) {
+    public Object read(ByteBuf buf, PacketData parentData) {
         return NetworkUtils.readVarInt(buf);
     }
 
     @Override
     public void write(ByteBuf buf, Object data) {
-        NetworkUtils.writeVarInt(buf, (Integer) data);
+        NetworkUtils.writeVarInt(buf, (int) data);
     }
 
 }

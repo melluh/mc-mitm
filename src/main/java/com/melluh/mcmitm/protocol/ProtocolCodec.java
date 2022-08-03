@@ -100,7 +100,7 @@ public class ProtocolCodec {
 
    public enum PacketDirection {
 
-        CLIENTBOUND("C->S"), SERVERBOUND("S->C");
+        CLIENTBOUND("S->C"), SERVERBOUND("C->S");
 
         private final String name;
 

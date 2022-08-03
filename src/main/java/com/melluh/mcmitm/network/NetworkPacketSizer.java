@@ -3,6 +3,7 @@ package com.melluh.mcmitm.network;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageCodec;
+import org.tinylog.Logger;
 
 import java.util.List;
 
@@ -23,7 +24,13 @@ public class NetworkPacketSizer extends ByteToMessageCodec<ByteBuf> {
         if(buf.readableBytes() < LENGTH_SIZE)
             return; // need to have at least 5 bytes readable as that's the max size of a varint
 
+        buf.markReaderIndex();
         int length = NetworkUtils.readVarInt(buf);
+        if(buf.readableBytes() < length) {
+            buf.resetReaderIndex();
+            return;
+        }
+
         out.add(buf.readBytes(length));
     }
 

@@ -21,10 +21,14 @@ public class PacketFieldCondition {
     }
 
     public boolean evaluate(PacketData data) {
+        return this.evaluate(data, fieldName);
+    }
+
+    public boolean evaluate(PacketData data, String fieldName) {
         if(fieldName.startsWith("../")) {
             if(!data.hasParent())
                 throw new IllegalStateException("Data does not have parent");
-            return this.evaluate(data.getParent());
+            return this.evaluate(data.getParent(), fieldName.substring(3));
         }
 
         Object value = data.getValue(fieldName);
@@ -32,11 +36,13 @@ public class PacketFieldCondition {
             return false;
 
         if(mode == Mode.EQUALS) {
-            return values.contains(value.toString());
+            return values.stream().map(String::valueOf)
+                    .anyMatch(str -> str.equals(String.valueOf(value)));
         }
 
         if(mode == Mode.NOT_EQUAL) {
-            return !values.contains(value.toString());
+            return values.stream().map(String::valueOf)
+                    .noneMatch(str -> str.equals(String.valueOf(value)));
         }
 
         if(mode == Mode.BITMASK) {

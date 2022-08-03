@@ -3,6 +3,7 @@ package com.melluh.mcmitm.network;
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.Session;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
+import com.melluh.mcmitm.protocol.field.PacketField;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.protocol.PacketType;
 import com.melluh.mcmitm.protocol.ProtocolCodec.ProtocolStateCodec;
@@ -31,9 +32,9 @@ public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
         try {
             int packetId = packet.getType().getId();
             NetworkUtils.writeVarInt(buf, packetId);
-            packet.write(buf);
+            packet.getData().write(buf);
         } catch (Throwable throwable) {
-            Logger.error(throwable, "Failed to write packet");
+            Logger.error(throwable, "Failed to write " + packet.getType().getName());
             buf.writerIndex(initial);
         }
     }
@@ -49,7 +50,19 @@ public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
                 throw new IllegalStateException("Unknown packet type: 0x" + Integer.toHexString(packetId) + " (" + direction.getName() + ", " + session.getState().name() + ")");
 
             Packet packet = new Packet(packetType);
-            packet.read(buf);
+            try {
+                packet.getData().read(buf);
+            } catch (Throwable throwable) {
+                Logger.error(throwable, "Failed to read {}", packetType::getName);
+                buf.readerIndex(buf.readerIndex() + buf.readableBytes());
+                return;
+            }
+
+            /*Logger.info(packet.getType().getName());
+            for (PacketField field : packet.getType().getFields()) {
+                Object data = packet.getData().getValue(field.getName());
+                Logger.info("\t{} ({}): {}", field.getName(), field.getType().name(), (data != null ? data.toString() : "[skipped]"));
+            }*/
 
             if(buf.readableBytes() > 0)
                 throw new IllegalStateException("Packet " + packetType.getName() + " not fully read (readable: " + buf.readableBytes() + ", state: " + session.getState().name() + ")");
