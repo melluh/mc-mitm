@@ -14,6 +14,7 @@ public class PacketData {
     private final PacketFieldList fieldList;
     private final PacketData parent;
     private final Map<String, Object> values = new HashMap<>();
+    private int length;
 
     public PacketData(PacketFieldList fieldList, PacketData parent) {
         this.fieldList = fieldList;
@@ -21,6 +22,7 @@ public class PacketData {
     }
 
     public void read(ByteBuf buf) throws IOException  {
+        this.length = buf.readableBytes();
         for(PacketField field : fieldList.getFields()) {
             PacketFieldCondition condition = field.getCondition();
             if(condition != null && !condition.evaluate(this))
@@ -57,4 +59,9 @@ public class PacketData {
     public Map<String, Object> getValues() {
         return values;
     }
+
+    public int getLength() {
+        return length;
+    }
+
 }

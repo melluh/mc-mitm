@@ -37,7 +37,7 @@ public class Session {
                         ch.pipeline()
                                 .addLast("sizer", new NetworkPacketSizer())
                                 .addLast("codec", new NetworkPacketCodec(proxy, Session.this, PacketDirection.CLIENTBOUND))
-                                .addLast("handler", new NetworkPacketHandler(Session.this, PacketDirection.CLIENTBOUND));
+                                .addLast("handler", new NetworkPacketHandler(proxy, Session.this, PacketDirection.CLIENTBOUND));
                     }
                 });
 

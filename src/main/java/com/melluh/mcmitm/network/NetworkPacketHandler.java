@@ -1,9 +1,9 @@
 package com.melluh.mcmitm.network;
 
+import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.Session;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
 import com.melluh.mcmitm.protocol.ProtocolState;
-import com.melluh.mcmitm.protocol.field.PacketField;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -11,24 +11,26 @@ import org.tinylog.Logger;
 
 public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
 
+    private final MinecraftProxy proxy;
     private final Session session;
     private final PacketDirection direction;
 
-    public NetworkPacketHandler(Session session, PacketDirection direction) {
+    public NetworkPacketHandler(MinecraftProxy proxy, Session session, PacketDirection direction) {
+        this.proxy = proxy;
         this.session = session;
         this.direction = direction;
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Packet packet) throws Exception {
-        String name = packet.getType().getName();
-        if(!name.startsWith("ClientboundMoveEntityPacket") && !name.equals("ClientboundRotateHeadPacket") && !name.startsWith("ServerboundMovePlayerPacket")) {
+        /*String name = packet.getType().getName();
+        //if(!name.startsWith("ClientboundMoveEntityPacket") && !name.equals("ClientboundRotateHeadPacket") && !name.startsWith("ServerboundMovePlayerPacket")) {
             Logger.info(name);
             for (PacketField field : packet.getType().getFields()) {
                 Object data = packet.getData().getValue(field.getName());
                 Logger.info("\t{} ({}): {}", field.getName(), field.getType().name(), (data != null ? data.toString() : "[skipped]"));
             }
-        }
+        //}*/
 
         // TODO: make this a lot better
         if(packet.getType().getName().equals("ClientIntentionPacket")) {
@@ -44,11 +46,18 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
             session.setState(ProtocolState.PLAY);
         }
 
+        proxy.getGui().addPacket(packet);
+
         if(direction == PacketDirection.CLIENTBOUND) {
             session.sendToClient(packet);
         } else {
             session.sendToServer(packet);
         }
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        Logger.info("Channel inactive: {}", ctx.channel().id());
     }
 
 }

@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'application'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 group 'com.melluh'
@@ -18,6 +18,12 @@ dependencies {
     implementation 'dev.dewy:nbt:1.5.1'
 }
 
-application {
-    mainClass = 'com.melluh.mcmitm.MinecraftProxy'
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.melluh.mcmitm.gui.MainGui'
+    }
+}
+
+build {
+    dependsOn shadowJar
 }

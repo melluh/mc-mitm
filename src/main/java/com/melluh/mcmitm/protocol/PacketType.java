@@ -21,6 +21,10 @@ public class PacketType {
         this.fieldList = fieldList;
     }
 
+    public String getHexId() {
+        return "0x" + Integer.toHexString(id).toUpperCase();
+    }
+
     public int getId() {
         return id;
     }
