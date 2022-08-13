@@ -32,6 +32,8 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
             }
         //}*/
 
+        proxy.getGui().addPacket(packet);
+
         // TODO: make this a lot better
         if(packet.getType().getName().equals("ClientIntentionPacket")) {
             int intention = (int) packet.getData().getValue("intention");
@@ -46,7 +48,10 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
             session.setState(ProtocolState.PLAY);
         }
 
-        proxy.getGui().addPacket(packet);
+        if(packet.getType().getName().equals("ClientboundLoginCompressionPacket")) {
+            session.setCompressionThreshold((int) packet.getData().getValue("compressionThreshold"));
+            return; // don't forward to client
+        }
 
         if(direction == PacketDirection.CLIENTBOUND) {
             session.sendToClient(packet);

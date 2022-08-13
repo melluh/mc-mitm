@@ -3,7 +3,6 @@ package com.melluh.mcmitm.network;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageCodec;
-import org.tinylog.Logger;
 
 import java.util.List;
 
