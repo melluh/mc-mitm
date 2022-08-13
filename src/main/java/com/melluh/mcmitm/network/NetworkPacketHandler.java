@@ -53,6 +53,12 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
             return; // don't forward to client
         }
 
+        if(packet.getType().getName().equals("ClientboundHelloPacket")) {
+            Logger.warn("Server is in online mode, disconnecting");
+            session.disconnect();
+            return;
+        }
+
         if(direction == PacketDirection.CLIENTBOUND) {
             session.sendToClient(packet);
         } else {

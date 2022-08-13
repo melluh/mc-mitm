@@ -29,7 +29,7 @@ public class Session {
         this.clientChannel = channel;
     }
 
-    public void startServerConnection() {
+    public void connectServer() {
         Bootstrap bootstrap = new Bootstrap()
                 .channel(NioSocketChannel.class)
                 .group(new NioEventLoopGroup())
@@ -46,6 +46,43 @@ public class Session {
 
         bootstrap.connect(proxy.getTargetHost(), proxy.getTargetPort()).syncUninterruptibly();
         Logger.info("Connected to server");
+    }
+
+    public void disconnect() {
+        this.disconnectServer();
+        this.disconnectClient();
+    }
+
+    public void disconnectClient() {
+        if(clientChannel != null) {
+            try {
+                clientChannel.close().sync();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void disconnectServer() {
+        if(serverChannel != null) {
+            try {
+                serverChannel.close().sync();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+            serverChannel = null;
+        }
+    }
+
+    private void closeChannel(Channel channel) {
+        if(channel == null)
+            return;
+
+        try {
+            channel.close().sync();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void setCompressionThreshold(int compressionThreshold) {

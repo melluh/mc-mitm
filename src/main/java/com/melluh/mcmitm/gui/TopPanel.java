@@ -1,48 +1,54 @@
 package com.melluh.mcmitm.gui;
 
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.gui.auth.AccountsDialog;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class ConnectionPanel extends JPanel {
+public class TopPanel extends JPanel {
 
     private final MainGui gui;
 
     private JButton startButton;
     private ProxyState proxyState = ProxyState.IDLE;
 
-    public ConnectionPanel(MainGui gui) {
+    public TopPanel(MainGui gui) {
         this.gui = gui;
-        this.setLayout(new FlowLayout(FlowLayout.LEFT));
+        this.setLayout(new BorderLayout());
         this.addComponents();
     }
 
     private void addComponents() {
-        this.add(new JLabel("Target IP:"));
+        JPanel firstRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        this.add(firstRow, BorderLayout.PAGE_START);
+        JPanel secondRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        this.add(secondRow, BorderLayout.PAGE_END);
+
+        firstRow.add(new JLabel("Target IP:"));
         JTextField targetIpField = new JTextField("127.0.0.1");
         targetIpField.setColumns(15);
-        this.add(targetIpField);
+        firstRow.add(targetIpField);
 
-        this.add(new JLabel("Target port:"));
+        firstRow.add(new JLabel("Target port:"));
         JTextField targetPortField = new JTextField("25565");
         targetPortField.setColumns(5);
-        this.add(targetPortField);
+        firstRow.add(targetPortField);
 
-        this.add(new JLabel("Listen port:"));
+        firstRow.add(new JLabel("Listen port:"));
         JTextField listenPortField = new JTextField("25570");
         listenPortField.setColumns(5);
-        this.add(listenPortField);
+        firstRow.add(listenPortField);
 
-        this.add(new JLabel("Version:"));
+        firstRow.add(new JLabel("Version:"));
         JComboBox<String> versionDropdown = new JComboBox<>();
         versionDropdown.addItem("Auto-detect");
         versionDropdown.addItem("760 (1.19.1/1.19.2)");
         versionDropdown.addItem("759 (1.19)");
-        this.add(versionDropdown);
+        firstRow.add(versionDropdown);
 
         this.startButton = new JButton("Start proxy");
-        this.add(startButton);
+        secondRow.add(startButton);
         startButton.addActionListener(event -> {
             if(proxyState == ProxyState.IDLE) {
                 String targetIp = targetIpField.getText();
@@ -55,6 +61,17 @@ public class ConnectionPanel extends JPanel {
                 gui.stopProxy();
             }
         });
+
+        JButton accountsButton = new JButton("Manage accounts");
+        secondRow.add(accountsButton);
+        accountsButton.addActionListener(event -> {
+            AccountsDialog dialog = new AccountsDialog(gui);
+            dialog.setLocationRelativeTo(gui);
+            dialog.setVisible(true);
+        });
+
+        JButton filterButton = new JButton("Filter packets");
+        secondRow.add(filterButton);
     }
 
     public void proxyStateChange(ProxyState state) {

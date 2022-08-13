@@ -9,7 +9,6 @@ import com.melluh.mcmitm.protocol.ProtocolCodec;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
 import com.melluh.mcmitm.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -94,7 +93,7 @@ public class MinecraftProxy {
                                 .addLast("handler", new NetworkPacketHandler(MinecraftProxy.this, session, PacketDirection.SERVERBOUND));
 
                         Logger.info("Session initialized: {}", ch.localAddress().getAddress().getHostAddress());
-                        session.startServerConnection();
+                        session.connectServer();
                     }
                 })
                 .option(ChannelOption.SO_BACKLOG, 128)
@@ -121,6 +120,8 @@ public class MinecraftProxy {
             group.shutdownGracefully();
             group = null;
         }
+
+        sessions.forEach(Session::disconnectServer);
         this.setState(ProxyState.IDLE);
     }
 

@@ -7,31 +7,20 @@ import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.MatteBorder;
 import java.awt.*;
 
 public class MainGui extends JFrame {
 
-    private static final String[] TABLE_COLUMNS = { "Direction", "ID", "Name", "Length" };
-    private final DefaultTableModel tableModel = new DefaultTableModel(null, TABLE_COLUMNS) {
-        @Override
-        public Class<?> getColumnClass(int columnIndex) {
-            return this.getValueAt(0, columnIndex).getClass();
-        }
-
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
-    };
+    private final FixedTableModel tableModel = new FixedTableModel("Direction", "ID", "Name", "Length");
 
     private MinecraftProxy proxy;
-    private ConnectionPanel connectionPanel;
+    private TopPanel topPanel;
 
     public MainGui() {
         this.setTitle("mc-mitm");
         this.setSize(800, 600);
-        this.setResizable(false);
+        //this.setResizable(false);
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.addComponents();
     }
@@ -39,16 +28,23 @@ public class MainGui extends JFrame {
     private void addComponents() {
         this.setLayout(new BorderLayout());
 
-        this.connectionPanel = new ConnectionPanel(this);
-        this.add(connectionPanel, BorderLayout.PAGE_START);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        this.add(mainPanel);
+
+        this.topPanel = new TopPanel(this);
+        topPanel.setBorder(new MatteBorder(0, 0, 1, 0, Color.BLACK));
+        this.add(topPanel, BorderLayout.NORTH);
 
         JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
-        // Always show the vertical scroll bar
+        scrollPane.setBorder(new MatteBorder(0, 0, 0, 1, Color.BLACK));
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         // Automatically scroll to the bottom when a new packet gets added
         scrollPane.getVerticalScrollBar().addAdjustmentListener(event -> event.getAdjustable().setValue(event.getAdjustable().getMaximum()));
-        this.add(scrollPane);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        mainPanel.add(new PacketInspectionPanel(), BorderLayout.EAST);
     }
 
     public void addPacket(Packet packet) {
@@ -89,7 +85,7 @@ public class MainGui extends JFrame {
     }
 
     private void proxyStateChange(ProxyState state) {
-        connectionPanel.proxyStateChange(state);
+        topPanel.proxyStateChange(state);
 
         if(state == ProxyState.IDLE)
             this.proxy = null;
