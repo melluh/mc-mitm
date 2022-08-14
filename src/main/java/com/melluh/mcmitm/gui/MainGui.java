@@ -2,6 +2,7 @@ package com.melluh.mcmitm.gui;
 
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
@@ -9,6 +10,8 @@ import org.tinylog.Logger;
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class MainGui extends JFrame {
 
@@ -57,18 +60,6 @@ public class MainGui extends JFrame {
         tableModel.addRow(values);
     }
 
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Throwable t) {
-            Logger.error(t, "Failed to set look and feel");
-        }
-
-        MainGui gui = new MainGui();
-        gui.setLocationRelativeTo(null);
-        gui.setVisible(true);
-    }
-
     public void startProxy(String targetIp, int targetPort, int listenPort) {
         if(proxy != null) {
             Logger.warn("Proxy already running");
@@ -98,6 +89,43 @@ public class MainGui extends JFrame {
         }
 
         proxy.stop();
+    }
+
+    public void displayException(Throwable throwable) {
+        StringWriter stringWriter = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(stringWriter));
+
+        JTextArea text = new JTextArea();
+        text.setEditable(false);
+        text.setText(stringWriter.toString());
+
+        JScrollPane scrollPane = new JScrollPane(text);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+
+        JPanel panel = new JPanel();
+        panel.add(scrollPane);
+
+        JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private static MainGui instance;
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Throwable t) {
+            Logger.error(t, "Failed to set look and feel");
+        }
+
+        instance = new MainGui();
+        instance.setLocationRelativeTo(null);
+        instance.setVisible(true);
+
+        AuthenticationHandler.getInstance().loadFromFile();
+    }
+
+    public static MainGui getInstance() {
+        return instance;
     }
 
 }

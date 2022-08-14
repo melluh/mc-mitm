@@ -1,6 +1,7 @@
 package com.melluh.mcmitm.gui.auth;
 
 import com.melluh.mcauth.MicrosoftAuthenticator.DeviceCode;
+import com.melluh.mcauth.MicrosoftAuthenticator.PollingResult;
 import com.melluh.mcauth.MicrosoftAuthenticator.PollingState;
 import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.gui.MainGui;
@@ -9,6 +10,7 @@ import org.tinylog.Logger;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.Executors;
@@ -21,6 +23,8 @@ public class AddAccountDialog extends JDialog {
 
     private final MainGui gui;
     private final DeviceCode deviceCode;
+
+    private JLabel instructionsLabel;
 
     public AddAccountDialog(MainGui gui, DeviceCode deviceCode) {
         this.gui = gui;
@@ -38,7 +42,8 @@ public class AddAccountDialog extends JDialog {
 
     private void startPolling() {
         executor.scheduleAtFixedRate(() -> {
-            AuthenticationHandler.MICROSOFT_AUTHENTICATOR.pollDeviceCode(deviceCode).thenAccept(result -> {
+            try {
+                PollingResult result = AuthenticationHandler.MICROSOFT_AUTHENTICATOR.pollDeviceCode(deviceCode).get();
                 if(result.state() == PollingState.DECLINED) {
                     this.closeWithError("Authentication was declined");
                     return;
@@ -50,11 +55,23 @@ public class AddAccountDialog extends JDialog {
                 }
 
                 if(result.state() == PollingState.ACCEPTED) {
-                    Logger.info("Accepted! Token: {}", result.token().value());
                     this.stopPolling();
+                    this.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    instructionsLabel.setText("<html><div style='text-align: center;'><b>Please wait, logging you in...</b></div></html>");
+
+                    AuthenticationHandler.getInstance().authenticate(result.token());
+
                     this.dispose();
+                    AccountsDialog dialog = new AccountsDialog(gui);
+                    dialog.setLocationRelativeTo(gui);
+                    dialog.setVisible(true);
                 }
-            });
+            } catch (Throwable ex) {
+                Logger.error(ex, "Failed to poll device code");
+                this.stopPolling();
+                this.dispose();
+                gui.displayException(ex);
+            }
         }, deviceCode.checkInterval(), deviceCode.checkInterval(), TimeUnit.SECONDS);
     }
 
@@ -65,22 +82,24 @@ public class AddAccountDialog extends JDialog {
     }
 
     private void stopPolling() {
-        executor.shutdownNow();
+        if(!executor.isShutdown())
+            executor.shutdown();
     }
 
     private void addComponents() {
-        JLabel instructions = new JLabel("<html><div style='text-align: center;'>To authenticate, open <b>" + deviceCode.verificationUri() + "</b> and enter the following code:<br><br><b style='font-size: 14px;'>" + deviceCode.userCode() + "</b></div></html>");
-        instructions.setBorder(new EmptyBorder(0, 10, 0, 10));
-        this.add(instructions, BorderLayout.CENTER);
+        this.instructionsLabel = new JLabel("<html><div style='text-align: center;'>To authenticate, open <b>" + deviceCode.verificationUri() + "</b> and enter the following code:<br><br><b style='font-size: 14px;'>" + deviceCode.userCode() + "</b></div></html>");
+        instructionsLabel.setBorder(new EmptyBorder(0, 10, 0, 10));
+        this.add(instructionsLabel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel();
         this.add(buttonPanel, BorderLayout.SOUTH);
 
-        JButton openButton = new JButton("Open in browser");
+        JButton openButton = new JButton("Copy to clipboard and open in browser");
         openButton.setEnabled(Desktop.isDesktopSupported());
         buttonPanel.add(openButton);
         openButton.addActionListener(event -> {
             try {
+                Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(deviceCode.userCode()), null);
                 Desktop.getDesktop().browse(URI.create(deviceCode.verificationUri()));
             } catch (IOException ex) {
                 Logger.error(ex, "Failed to open browser");
