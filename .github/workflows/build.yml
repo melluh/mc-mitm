@@ -33,3 +33,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONARQUBE_HOST_URL }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Package
+          path: build/libs
