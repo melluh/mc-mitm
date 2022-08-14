@@ -98,16 +98,18 @@ public class Session {
         }
     }
 
+    private static final String COMPRESSION_HANDLER_NAME = "compression";
+
     private void addCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
-        if(pipeline.get("compression") == null)
-            pipeline.addAfter("sizer", "compression", new NetworkCompression(this));
+        if(pipeline.get(COMPRESSION_HANDLER_NAME) == null)
+            pipeline.addAfter("sizer", COMPRESSION_HANDLER_NAME, new NetworkCompression(this));
     }
 
     private void removeCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
-        if(pipeline.get("compression") != null)
-            pipeline.remove("compression");
+        if(pipeline.get(COMPRESSION_HANDLER_NAME) != null)
+            pipeline.remove(COMPRESSION_HANDLER_NAME);
     }
 
     public void sendToClient(Packet packet) {

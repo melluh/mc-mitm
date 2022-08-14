@@ -55,7 +55,11 @@ public class MinecraftProxy {
             stateUpdateConsumer.accept(state);
     }
 
-    public void run() throws Exception {
+    public ProxyState getState() {
+        return state;
+    }
+
+    public void run() {
         Logger.info("Starting proxy...");
         JsonObject protocolJson = Utils.loadJsonFromFile("protocol/versions/759.json");
         this.codec = ProtocolCodec.loadFromJson(protocolJson);
@@ -99,20 +103,24 @@ public class MinecraftProxy {
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-        ChannelFuture future = bootstrap.bind(listenPort).sync();
-        future.addListener(future1 -> {
-           if(future1.isSuccess()) {
-               this.setState(ProxyState.RUNNING);
-           } else {
-               if(future1.cause() != null) {
-                   Logger.error(future1.cause(), "Proxy failed to start");
-               } else {
-                   Logger.error("Proxy failed to start; no cause attached");
-               }
+        try {
+            ChannelFuture future = bootstrap.bind(listenPort).sync();
+            future.addListener(future1 -> {
+                if(future1.isSuccess()) {
+                    this.setState(ProxyState.RUNNING);
+                } else {
+                    if(future1.cause() != null) {
+                        Logger.error(future1.cause(), "Proxy failed to start");
+                    } else {
+                        Logger.error("Proxy failed to start; no cause attached");
+                    }
 
-               this.setState(ProxyState.IDLE);
-           }
-        });
+                    this.setState(ProxyState.IDLE);
+                }
+            });
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void stop() {

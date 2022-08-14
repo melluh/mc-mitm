@@ -9,9 +9,7 @@ import java.awt.*;
 public class TopPanel extends JPanel {
 
     private final MainGui gui;
-
     private JButton startButton;
-    private ProxyState proxyState = ProxyState.IDLE;
 
     public TopPanel(MainGui gui) {
         this.gui = gui;
@@ -50,6 +48,7 @@ public class TopPanel extends JPanel {
         this.startButton = new JButton("Start proxy");
         secondRow.add(startButton);
         startButton.addActionListener(event -> {
+            ProxyState proxyState = gui.getProxyState();
             if(proxyState == ProxyState.IDLE) {
                 String targetIp = targetIpField.getText();
                 int targetPort = Integer.parseInt(targetPortField.getText());
@@ -75,7 +74,6 @@ public class TopPanel extends JPanel {
     }
 
     public void proxyStateChange(ProxyState state) {
-        this.proxyState = state;
         switch(state) {
             case IDLE -> startButton.setText("Start proxy");
             case RUNNING -> startButton.setText("Stop proxy");

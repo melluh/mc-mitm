@@ -32,7 +32,8 @@ public class NetworkUtils {
 
             position += 7;
 
-            if (position >= 32) throw new RuntimeException("VarInt is too big");
+            if (position >= 32)
+                throw new IllegalStateException("VarInt is too big");
         }
 
         return value;
@@ -59,8 +60,9 @@ public class NetworkUtils {
             if((currentByte & CONTINUE_BIT) == 0) break;
 
             position += 7;
+
             if(position >= 64)
-                throw new RuntimeException("VarInt is too big");
+                throw new IllegalStateException("VarInt is too big");
         }
 
         return value;

@@ -89,8 +89,8 @@ public class ProtocolCodec {
                 try {
                     PacketType packetType = PacketType.create(packetJson);
                     stateCodec.registerPacket(packetType);
-                } catch (Throwable throwable) {
-                    Logger.error(throwable, "Failed to initialize packet type {}", packetJson.getString("name"));
+                } catch (Exception ex) {
+                    Logger.error(ex, "Failed to initialize packet type {}", packetJson.getString("name"));
                 }
             }
         }

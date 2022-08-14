@@ -9,6 +9,7 @@ import org.tinylog.Logger;
 
 import javax.swing.*;
 import javax.swing.border.MatteBorder;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -17,7 +18,7 @@ public class MainGui extends JFrame {
 
     private final FixedTableModel tableModel = new FixedTableModel("Direction", "ID", "Name", "Length");
 
-    private MinecraftProxy proxy;
+    private transient MinecraftProxy proxy;
     private TopPanel topPanel;
 
     public MainGui() {
@@ -40,12 +41,20 @@ public class MainGui extends JFrame {
         this.add(topPanel, BorderLayout.NORTH);
 
         JTable table = new JTable(tableModel);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(new MatteBorder(0, 0, 0, 1, Color.BLACK));
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         // Automatically scroll to the bottom when a new packet gets added
         scrollPane.getVerticalScrollBar().addAdjustmentListener(event -> event.getAdjustable().setValue(event.getAdjustable().getMaximum()));
+
+        mainPanel.add(new PacketInspectionPanel(), BorderLayout.EAST);
         mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(0).setPreferredWidth(60);
+        columnModel.getColumn(1).setPreferredWidth(60);
+        columnModel.getColumn(2).setPreferredWidth(250);
 
         mainPanel.add(new PacketInspectionPanel(), BorderLayout.EAST);
     }
@@ -70,14 +79,13 @@ public class MainGui extends JFrame {
             this.proxy = new MinecraftProxy(this, listenPort, targetIp, targetPort);
             proxy.onStateChange(this::proxyStateChange);
             proxy.run();
-        } catch (Throwable t) {
-            Logger.error(t, "Failed to launch");
+        } catch (Exception ex) {
+            Logger.error(ex, "Failed to launch");
         }
     }
 
     private void proxyStateChange(ProxyState state) {
         topPanel.proxyStateChange(state);
-
         if(state == ProxyState.IDLE)
             this.proxy = null;
     }
@@ -101,6 +109,7 @@ public class MainGui extends JFrame {
 
         JScrollPane scrollPane = new JScrollPane(text);
         scrollPane.setPreferredSize(new Dimension(400, 200));
+        text.setCaretPosition(0);
 
         JPanel panel = new JPanel();
         panel.add(scrollPane);
@@ -108,13 +117,17 @@ public class MainGui extends JFrame {
         JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE);
     }
 
+    public ProxyState getProxyState() {
+        return proxy != null ? proxy.getState() : ProxyState.IDLE;
+    }
+
     private static MainGui instance;
 
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Throwable t) {
-            Logger.error(t, "Failed to set look and feel");
+        } catch (Exception ex) {
+            Logger.error(ex, "Failed to set look and feel");
         }
 
         instance = new MainGui();

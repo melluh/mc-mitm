@@ -22,16 +22,7 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Packet packet) throws Exception {
-        /*String name = packet.getType().getName();
-        //if(!name.startsWith("ClientboundMoveEntityPacket") && !name.equals("ClientboundRotateHeadPacket") && !name.startsWith("ServerboundMovePlayerPacket")) {
-            Logger.info(name);
-            for (PacketField field : packet.getType().getFields()) {
-                Object data = packet.getData().getValue(field.getName());
-                Logger.info("\t{} ({}): {}", field.getName(), field.getType().name(), (data != null ? data.toString() : "[skipped]"));
-            }
-        //}*/
-
+    protected void channelRead0(ChannelHandlerContext ctx, Packet packet) {
         proxy.getGui().addPacket(packet);
 
         // TODO: make this a lot better
@@ -67,7 +58,7 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
     }
 
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    public void channelInactive(ChannelHandlerContext ctx) {
         Logger.info("Channel inactive: {}", ctx.channel().id());
     }
 

@@ -24,7 +24,7 @@ public class Utils {
             return JsonParser.object().from(new FileReader(file));
         } catch (IOException | JsonParserException ex) {
             Logger.error(ex, "Failed to read {}", file.getName());
-            return null;
+            return new JsonObject();
         }
     }
 
