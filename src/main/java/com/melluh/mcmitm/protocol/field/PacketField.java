@@ -65,7 +65,8 @@ public abstract class PacketField {
         COLLECTION(CollectionField::new),
         BYTES(BytesField::new),
         NBT(NbtField::new),
-        ITEM(ItemField::new);
+        ITEM(ItemField::new),
+        LONG_ARRAY(LongArrayField::new);
 
         private final Function<JsonObject, PacketField> createFunction;
 
