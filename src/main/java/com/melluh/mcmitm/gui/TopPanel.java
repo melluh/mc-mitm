@@ -72,12 +72,17 @@ public class TopPanel extends JPanel {
         JButton accountsButton = new JButton("Manage accounts");
         secondRow.add(accountsButton);
         accountsButton.addActionListener(event -> {
-
+            AccountsDialog dialog = new AccountsDialog(gui);
+            dialog.setLocationRelativeTo(gui);
+            dialog.setVisible(true);
         });
 
         JButton filterButton = new JButton("Filter packets");
         secondRow.add(filterButton);
         filterButton.addActionListener(event -> {
+            PacketFilterDialog dialog = new PacketFilterDialog(gui);
+            dialog.setLocationRelativeTo(gui);
+            dialog.setVisible(true);
         });
     }
 
