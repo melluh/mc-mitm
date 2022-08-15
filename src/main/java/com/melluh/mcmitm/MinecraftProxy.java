@@ -58,7 +58,7 @@ public class MinecraftProxy {
 
     public void run() throws Exception {
         Logger.info("Starting proxy...");
-        JsonObject protocolJson = Utils.loadJsonFromFile("protocol/versions/759.json");
+        JsonObject protocolJson = Utils.jsonObjectFromFile("protocol/versions/759.json");
         this.codec = ProtocolCodec.loadFromJson(protocolJson);
 
         /*for(ProtocolState state : ProtocolState.values()) {

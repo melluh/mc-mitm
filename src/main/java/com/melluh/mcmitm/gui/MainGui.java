@@ -2,6 +2,7 @@ package com.melluh.mcmitm.gui;
 
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.protocol.ProtocolVersions;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
@@ -9,6 +10,8 @@ import org.tinylog.Logger;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class MainGui extends JFrame {
 
@@ -31,7 +34,7 @@ public class MainGui extends JFrame {
     public MainGui() {
         this.setTitle("mc-mitm");
         this.setSize(800, 600);
-        this.setResizable(false);
+        this.setMinimumSize(new Dimension(700, 300));
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.addComponents();
     }
@@ -59,18 +62,6 @@ public class MainGui extends JFrame {
                 Utils.formatLength(packet.getData().getLength())
         };
         tableModel.addRow(values);
-    }
-
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Throwable t) {
-            Logger.error(t, "Failed to set look and feel");
-        }
-
-        MainGui gui = new MainGui();
-        gui.setLocationRelativeTo(null);
-        gui.setVisible(true);
     }
 
     public void startProxy(String targetIp, int targetPort, int listenPort) {
@@ -102,6 +93,48 @@ public class MainGui extends JFrame {
         }
 
         proxy.stop();
+    }
+
+    public void displayException(Throwable throwable) {
+        StringWriter stringWriter = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(stringWriter));
+
+        JTextArea text = new JTextArea();
+        text.setEditable(false);
+        text.setText(stringWriter.toString());
+
+        JScrollPane scrollPane = new JScrollPane(text);
+        scrollPane.setPreferredSize(new Dimension(400, 200));
+        text.setCaretPosition(0);
+
+        JPanel panel = new JPanel();
+        panel.add(scrollPane);
+
+        JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE);
+    }
+
+    public ProxyState getProxyState() {
+        return proxy != null ? proxy.getState() : ProxyState.IDLE;
+    }
+
+    private static MainGui instance;
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception ex) {
+            Logger.error(ex, "Failed to set look and feel");
+        }
+
+        ProtocolVersions.loadAll();
+
+        instance = new MainGui();
+        instance.setLocationRelativeTo(null);
+        instance.setVisible(true);
+    }
+
+    public static MainGui getInstance() {
+        return instance;
     }
 
 }

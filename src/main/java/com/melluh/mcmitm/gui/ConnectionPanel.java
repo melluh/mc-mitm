@@ -1,9 +1,16 @@
 package com.melluh.mcmitm.gui;
 
+
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.gui.dialog.AccountsDialog;
+import com.melluh.mcmitm.gui.dialog.PacketFilterDialog;
+import com.melluh.mcmitm.protocol.ProtocolCodec;
+import com.melluh.mcmitm.protocol.ProtocolVersions;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.util.List;
 
 public class ConnectionPanel extends JPanel {
 
@@ -19,27 +26,34 @@ public class ConnectionPanel extends JPanel {
     }
 
     private void addComponents() {
-        this.add(new JLabel("Target IP:"));
+        JPanel firstRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        firstRow.setBorder(new EmptyBorder(5, 5, 0, 5));
+        this.add(firstRow, BorderLayout.PAGE_START);
+        JPanel secondRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        secondRow.setBorder(new EmptyBorder(0, 5, 5, 5));
+        this.add(secondRow, BorderLayout.PAGE_END);
+
+        firstRow.add(new JLabel("Target IP:"));
         JTextField targetIpField = new JTextField("127.0.0.1");
         targetIpField.setColumns(15);
         this.add(targetIpField);
 
-        this.add(new JLabel("Target port:"));
+        firstRow.add(new MarginLabel("Target port:"));
         JTextField targetPortField = new JTextField("25565");
         targetPortField.setColumns(5);
         this.add(targetPortField);
 
-        this.add(new JLabel("Listen port:"));
+        firstRow.add(new MarginLabel("Listen port:"));
         JTextField listenPortField = new JTextField("25570");
         listenPortField.setColumns(5);
         this.add(listenPortField);
 
-        this.add(new JLabel("Version:"));
-        JComboBox<String> versionDropdown = new JComboBox<>();
-        versionDropdown.addItem("Auto-detect");
-        versionDropdown.addItem("760 (1.19.1/1.19.2)");
-        versionDropdown.addItem("759 (1.19)");
-        this.add(versionDropdown);
+        firstRow.add(new MarginLabel("Version:"));
+        JComboBox<String> versionSelector = new JComboBox<>();
+        versionSelector.addItem("Auto-detect");
+        firstRow.add(versionSelector);
+        List<ProtocolCodec> versions = ProtocolVersions.getAll();
+        versions.forEach(version -> versionSelector.addItem(version.getDisplayName()));
 
         this.startButton = new JButton("Start proxy");
         this.add(startButton);
@@ -54,6 +68,16 @@ public class ConnectionPanel extends JPanel {
             } else if(proxyState == ProxyState.RUNNING) {
                 gui.stopProxy();
             }
+        });
+
+        JButton accountsButton = new JButton("Manage accounts");
+        secondRow.add(accountsButton);
+        accountsButton.addActionListener(event -> {
+        });
+
+        JButton filterButton = new JButton("Filter packets");
+        secondRow.add(filterButton);
+        filterButton.addActionListener(event -> {
         });
     }
 
