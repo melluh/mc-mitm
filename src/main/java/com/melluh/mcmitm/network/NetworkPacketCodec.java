@@ -44,7 +44,7 @@ public class NetworkPacketCodec extends ByteToMessageCodec<Packet> {
             int packetId = NetworkUtils.readVarInt(buf);
 
             ProtocolStateCodec codec = proxy.getCodec().getStateCodec(session.getState());
-            PacketType packetType = codec.getPacket(direction, packetId);
+            PacketType packetType = codec.getPacketType(direction, packetId);
             if(packetType == null)
                 throw new IllegalStateException("Unknown packet type: 0x" + Integer.toHexString(packetId) + " (" + direction.getName() + ", " + session.getState().name() + ")");
 

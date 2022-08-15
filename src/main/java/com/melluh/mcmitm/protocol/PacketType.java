@@ -5,24 +5,28 @@ import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
 import com.melluh.mcmitm.protocol.field.PacketField;
 import com.melluh.mcmitm.protocol.field.PacketFieldList;
 
+import java.util.HexFormat;
 import java.util.List;
 
 public class PacketType {
 
-    private final int id;
+    private int id;
     private final String name;
     private final PacketDirection direction;
     private final PacketFieldList fieldList;
 
-    public PacketType(int id, String name, PacketDirection direction, PacketFieldList fieldList) {
-        this.id = id;
+    public PacketType(String name, PacketDirection direction, PacketFieldList fieldList) {
         this.name = name;
         this.direction = direction;
         this.fieldList = fieldList;
     }
 
+    protected void setId(int id) {
+        this.id = id;
+    }
+
     public String getHexId() {
-        return "0x" + Integer.toHexString(id).toUpperCase();
+        return String.format("0x%1$02X", id);
     }
 
     public int getId() {
@@ -46,11 +50,10 @@ public class PacketType {
     }
 
     public static PacketType create(JsonObject json) {
-        int id = Integer.decode(json.getString("id"));
         String name = json.getString("name");
         PacketDirection direction = PacketDirection.parse(json.getString("to"));
         PacketFieldList fieldList = PacketFieldList.create(json.getArray("fields"));
-        return new PacketType(id, name, direction, fieldList);
+        return new PacketType(name, direction, fieldList);
     }
 
 }

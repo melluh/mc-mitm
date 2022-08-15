@@ -1,5 +1,6 @@
 package com.melluh.mcmitm.util;
 
+import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
@@ -15,11 +16,24 @@ public class Utils {
 
     private Utils() {}
 
-    public static JsonObject loadJsonFromFile(String fileName) {
-        return loadJsonFromFile(new File(fileName));
+    public static JsonArray jsonArrayFromFile(String fileName) {
+        return jsonArrayFromFile(new File(fileName));
     }
 
-    public static JsonObject loadJsonFromFile(File file) {
+    public static JsonArray jsonArrayFromFile(File file) {
+        try {
+            return JsonParser.array().from(new FileReader(file));
+        } catch (IOException | JsonParserException ex) {
+            Logger.error(ex, "Failed to read {}", file.getName());
+            return new JsonArray();
+        }
+    }
+
+    public static JsonObject jsonObjectFromFile(String fileName) {
+        return jsonObjectFromFile(new File(fileName));
+    }
+
+    public static JsonObject jsonObjectFromFile(File file) {
         try {
             return JsonParser.object().from(new FileReader(file));
         } catch (IOException | JsonParserException ex) {
@@ -39,6 +53,10 @@ public class Utils {
         }
 
         return String.format("%.1f %cB", bytes / 1000.0, ci.current());
+    }
+
+    public static String capitalize(String str) {
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
     }
 
 }

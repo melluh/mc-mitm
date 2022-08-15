@@ -3,6 +3,7 @@ package com.melluh.mcmitm.gui;
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
 import com.melluh.mcmitm.auth.AuthenticationHandler;
+import com.melluh.mcmitm.protocol.ProtocolVersions;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
@@ -24,7 +25,7 @@ public class MainGui extends JFrame {
     public MainGui() {
         this.setTitle("mc-mitm");
         this.setSize(800, 600);
-        //this.setResizable(false);
+        this.setMinimumSize(new Dimension(700, 300));
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
         this.addComponents();
     }
@@ -134,6 +135,7 @@ public class MainGui extends JFrame {
         instance.setLocationRelativeTo(null);
         instance.setVisible(true);
 
+        ProtocolVersions.loadAll();
         AuthenticationHandler.getInstance().loadFromFile();
     }
 

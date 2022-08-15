@@ -4,23 +4,39 @@ import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import org.tinylog.Logger;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 public class ProtocolCodec {
 
     private final int protocolId;
+    private final List<String> releases;
     private final Map<ProtocolState, ProtocolStateCodec> stateCodecs = new EnumMap<>(ProtocolState.class);
 
-    public ProtocolCodec(int protocolId) {
+    public ProtocolCodec(int protocolId, List<String> releases) {
         this.protocolId = protocolId;
+        this.releases = releases;
+    }
+
+    public String getDisplayName() {
+        return protocolId + " (" + String.join("/", releases) + ")";
     }
 
     public void registerStateCodec(ProtocolState state, ProtocolStateCodec codec) {
         stateCodecs.put(state, codec);
+    }
+
+    public List<ProtocolStateCodec> getStateCodecs() {
+        return stateCodecs.entrySet().stream()
+                .sorted(Entry.comparingByKey())
+                .map(Entry::getValue)
+                .toList();
     }
 
     public ProtocolStateCodec getStateCodec(ProtocolState state) {
@@ -31,56 +47,60 @@ public class ProtocolCodec {
         return protocolId;
     }
 
+    public List<PacketType> getPacketTypes() {
+        return stateCodecs.entrySet().stream()
+                .sorted(Entry.comparingByKey())
+                .flatMap(e -> e.getValue().getPacketTypes().stream())
+                .toList();
+    }
+
     public static class ProtocolStateCodec {
 
-        private final Map<Integer, PacketType> clientboundPackets = new HashMap<>();
-        private final Map<Integer, PacketType> serverboundPackets = new HashMap<>();
+        private final ProtocolState state;
+        private final List<PacketType> clientboundPackets = new ArrayList<>();
+        private final List<PacketType> serverboundPackets = new ArrayList<>();
 
-        public void registerPacket(PacketType packet) {
-            switch(packet.getDirection()) {
-                case CLIENTBOUND -> clientboundPackets.put(packet.getId(), packet);
-                case SERVERBOUND -> serverboundPackets.put(packet.getId(), packet);
-            }
+        public ProtocolStateCodec(ProtocolState state) {
+            this.state = state;
         }
 
-        public PacketType getPacket(PacketDirection direction, int id) {
+        public ProtocolState getState() {
+            return state;
+        }
+
+        public void registerPacketType(PacketType packet) {
+            List<PacketType> list = this.getPacketTypes(packet.getDirection());
+            list.add(packet);
+            packet.setId(list.indexOf(packet));
+        }
+
+        public PacketType getPacketType(PacketDirection direction, int id) {
+            return this.getPacketTypes(direction).get(id);
+        }
+
+        private List<PacketType> getPacketTypes(PacketDirection direction) {
             return switch(direction) {
-                case CLIENTBOUND -> clientboundPackets.get(id);
-                case SERVERBOUND -> serverboundPackets.get(id);
+                case CLIENTBOUND -> clientboundPackets;
+                case SERVERBOUND -> serverboundPackets;
             };
         }
 
-        public PacketType getClientboundPacket(int id) {
-            return clientboundPackets.get(id);
-        }
-
-        public PacketType getServerboundPacket(int id) {
-            return serverboundPackets.get(id);
-        }
-
-        public List<PacketType> getClientboundPackets() {
-            return clientboundPackets.entrySet().stream()
-                    .sorted(Entry.comparingByKey())
-                    .map(Entry::getValue)
-                    .toList();
-        }
-
-        public List<PacketType> getServerboundPackets() {
-            return serverboundPackets.entrySet().stream()
-                    .sorted(Entry.comparingByKey())
-                    .map(Entry::getValue)
+        public List<PacketType> getPacketTypes() {
+            return Stream.concat(clientboundPackets.stream(), serverboundPackets.stream())
                     .toList();
         }
 
     }
 
    public static ProtocolCodec loadFromJson(JsonObject json) {
-        int protocolId = json.getObject("version").getInt("protocol");
-        ProtocolCodec codec = new ProtocolCodec(protocolId);
+        JsonObject versionJson = json.getObject("version");
+        int protocolId = versionJson.getInt("protocol");
+        List<String> releases = versionJson.getArray("releases").stream().map(String::valueOf).toList();
+        ProtocolCodec codec = new ProtocolCodec(protocolId, releases);
 
         JsonObject packetsJson = json.getObject("packets");
         for(ProtocolState state : ProtocolState.values()) {
-            ProtocolStateCodec stateCodec = new ProtocolStateCodec();
+            ProtocolStateCodec stateCodec = new ProtocolStateCodec(state);
             codec.registerStateCodec(state, stateCodec);
 
             JsonArray statePacketsJson = packetsJson.getArray(state.name().toLowerCase());
@@ -88,7 +108,7 @@ public class ProtocolCodec {
                 JsonObject packetJson = (JsonObject) obj;
                 try {
                     PacketType packetType = PacketType.create(packetJson);
-                    stateCodec.registerPacket(packetType);
+                    stateCodec.registerPacketType(packetType);
                 } catch (Exception ex) {
                     Logger.error(ex, "Failed to initialize packet type {}", packetJson.getString("name"));
                 }
