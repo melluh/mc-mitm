@@ -2,6 +2,7 @@ package com.melluh.mcmitm.gui;
 
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.Settings;
 import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.protocol.ProtocolVersions;
 import com.melluh.mcmitm.protocol.packet.Packet;
@@ -131,12 +132,13 @@ public class MainGui extends JFrame {
             Logger.error(ex, "Failed to set look and feel");
         }
 
+        Settings.getInstance().load();
+        AuthenticationHandler.getInstance().loadFromFile();
+        ProtocolVersions.loadAll();
+
         instance = new MainGui();
         instance.setLocationRelativeTo(null);
         instance.setVisible(true);
-
-        ProtocolVersions.loadAll();
-        AuthenticationHandler.getInstance().loadFromFile();
     }
 
     public static MainGui getInstance() {

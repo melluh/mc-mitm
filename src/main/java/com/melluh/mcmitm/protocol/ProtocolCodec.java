@@ -32,6 +32,12 @@ public class ProtocolCodec {
         stateCodecs.put(state, codec);
     }
 
+    public List<PacketType> getPacketTypes() {
+        return this.getStateCodecs().stream()
+                .flatMap(stateCodec -> stateCodec.getPacketTypes().stream())
+                .toList();
+    }
+
     public List<ProtocolStateCodec> getStateCodecs() {
         return stateCodecs.entrySet().stream()
                 .sorted(Entry.comparingByKey())
@@ -45,13 +51,6 @@ public class ProtocolCodec {
 
     public int getProtocolId() {
         return protocolId;
-    }
-
-    public List<PacketType> getPacketTypes() {
-        return stateCodecs.entrySet().stream()
-                .sorted(Entry.comparingByKey())
-                .flatMap(e -> e.getValue().getPacketTypes().stream())
-                .toList();
     }
 
     public static class ProtocolStateCodec {
@@ -107,7 +106,7 @@ public class ProtocolCodec {
             for(Object obj : statePacketsJson) {
                 JsonObject packetJson = (JsonObject) obj;
                 try {
-                    PacketType packetType = PacketType.create(packetJson);
+                    PacketType packetType = PacketType.create(packetJson, state);
                     stateCodec.registerPacketType(packetType);
                 } catch (Exception ex) {
                     Logger.error(ex, "Failed to initialize packet type {}", packetJson.getString("name"));

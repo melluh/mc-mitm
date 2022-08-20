@@ -14,11 +14,13 @@ public class PacketType {
     private final String name;
     private final PacketDirection direction;
     private final PacketFieldList fieldList;
+    private final ProtocolState state;
 
-    public PacketType(String name, PacketDirection direction, PacketFieldList fieldList) {
+    public PacketType(String name, PacketDirection direction, PacketFieldList fieldList, ProtocolState state) {
         this.name = name;
         this.direction = direction;
         this.fieldList = fieldList;
+        this.state = state;
     }
 
     protected void setId(int id) {
@@ -49,11 +51,15 @@ public class PacketType {
         return fieldList.getFields();
     }
 
-    public static PacketType create(JsonObject json) {
+    public ProtocolState getState() {
+        return state;
+    }
+
+    public static PacketType create(JsonObject json, ProtocolState state) {
         String name = json.getString("name");
         PacketDirection direction = PacketDirection.parse(json.getString("to"));
         PacketFieldList fieldList = PacketFieldList.create(json.getArray("fields"));
-        return new PacketType(name, direction, fieldList);
+        return new PacketType(name, direction, fieldList, state);
     }
 
 }

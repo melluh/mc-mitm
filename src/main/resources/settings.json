@@ -1,0 +1,13 @@
+{
+    "filteredPackets": [
+        "PLAY/ClientboundLevelChunkWithLightPacket",
+        "PLAY/ClientboundForgetLevelChunkPacket",
+        "PLAY/ClientboundKeepAlivePacket",
+        "PLAY/ClientboundSetTimePacket",
+        "PLAY/ServerboundMovePlayerPacket.Pos",
+        "PLAY/ServerboundMovePlayerPacket.Rot",
+        "PLAY/ServerboundMovePlayerPacket.PosRot",
+        "PLAY/ServerboundMovePlayerPacket.StatusOnly",
+        "PLAY/ServerboundKeepAlivePacket"
+    ]
+}

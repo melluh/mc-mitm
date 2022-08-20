@@ -13,6 +13,7 @@ import com.melluh.mcauth.tokens.MicrosoftToken;
 import com.melluh.mcauth.tokens.MojangToken;
 import com.melluh.mcauth.tokens.XboxToken;
 import com.melluh.mcmitm.gui.MainGui;
+import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
 
 import java.io.File;
@@ -25,7 +26,7 @@ import java.util.concurrent.ExecutionException;
 
 public class AuthenticationHandler {
 
-    public static final MicrosoftAuthenticator MICROSOFT_AUTHENTICATOR = MicrosoftAuthenticator.createDefault("714f41fe-d740-421a-9763-3e6990462fc5");
+    public static final MicrosoftAuthenticator MICROSOFT_AUTHENTICATOR = MicrosoftAuthenticator.createDefault("9e04775c-94d1-4a92-8bea-11a63028df45");
     public static final XboxAuthenticator XBOX_AUTHENTICATOR = XboxAuthenticator.createDefault();
     public static final MojangAuthenticator MOJANG_AUTHENTICATOR = MojangAuthenticator.createDefault();
 
@@ -100,11 +101,7 @@ public class AuthenticationHandler {
             accountsArray.add(json);
         }
 
-        try {
-            Files.writeString(this.getAccountsFile().toPath(), JsonWriter.string(accountsArray));
-        } catch (IOException ex) {
-            Logger.error(ex, "Failed to write accounts file");
-        }
+        Utils.writeJson(this.getAccountsFile(), accountsArray);
     }
 
     public void removeAccount(Account account) {
