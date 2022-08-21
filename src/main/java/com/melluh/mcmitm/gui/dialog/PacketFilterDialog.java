@@ -5,9 +5,7 @@ import com.melluh.mcmitm.gui.MarginLabel;
 import com.melluh.mcmitm.gui.MainGui;
 import com.melluh.mcmitm.protocol.PacketType;
 import com.melluh.mcmitm.protocol.ProtocolCodec;
-import com.melluh.mcmitm.protocol.ProtocolCodec.ProtocolStateCodec;
 import com.melluh.mcmitm.protocol.ProtocolVersions;
-import org.tinylog.Logger;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -68,7 +66,7 @@ public class PacketFilterDialog extends JDialog {
 
         Settings settings = Settings.getInstance();
         currentTypes.clear();
-        for(PacketType packetType : selectedCodec.getPacketTypes()) {
+        for(PacketType packetType : selectedCodec.getAllPacketTypes()) {
             if(!packetType.getName().toLowerCase().contains(searchQuery.toLowerCase()))
                 continue;
             currentTypes.add(packetType);

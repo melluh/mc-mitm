@@ -85,7 +85,8 @@ public class AccountsDialog extends JDialog {
         buttonPanel.add(removeButton);
 
         table.getSelectionModel().addListSelectionListener(event -> {
-            SwingUtilities.invokeLater(() -> removeButton.setEnabled(true));
+            if(event.getValueIsAdjusting())
+                SwingUtilities.invokeLater(() -> removeButton.setEnabled(true));
         });
 
         JButton backButton = new JButton("Close");

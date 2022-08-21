@@ -7,6 +7,7 @@ import com.melluh.mcmitm.network.NetworkPacketHandler;
 import com.melluh.mcmitm.network.NetworkPacketSizer;
 import com.melluh.mcmitm.protocol.ProtocolCodec;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
+import com.melluh.mcmitm.protocol.ProtocolCodec.ProtocolStateCodec;
 import com.melluh.mcmitm.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;

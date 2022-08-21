@@ -1,6 +1,9 @@
 package com.melluh.mcmitm;
 
+import com.melluh.mcmitm.auth.Account;
+import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.network.NetworkCompression;
+import com.melluh.mcmitm.network.NetworkEncryption;
 import com.melluh.mcmitm.network.NetworkPacketCodec;
 import com.melluh.mcmitm.network.NetworkPacketHandler;
 import com.melluh.mcmitm.network.NetworkPacketSizer;
@@ -15,6 +18,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.tinylog.Logger;
 
+import javax.crypto.SecretKey;
+import java.security.GeneralSecurityException;
+
 public class Session {
 
     private final MinecraftProxy proxy;
@@ -23,6 +29,9 @@ public class Session {
 
     private ProtocolState state = ProtocolState.HANDSHAKING;
     private int compressionThreshold = -1;
+
+    private String username;
+    private Account account;
 
     public Session(MinecraftProxy proxy, Channel channel) {
         this.proxy = proxy;
@@ -99,17 +108,27 @@ public class Session {
     }
 
     private static final String COMPRESSION_HANDLER_NAME = "compression";
+    private static final String ENCRYPTION_HANDLER_NAME = "encryption";
 
     private void addCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
         if(pipeline.get(COMPRESSION_HANDLER_NAME) == null)
-            pipeline.addAfter("sizer", COMPRESSION_HANDLER_NAME, new NetworkCompression(this));
+            pipeline.addBefore("codec", COMPRESSION_HANDLER_NAME, new NetworkCompression(this));
     }
 
     private void removeCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
         if(pipeline.get(COMPRESSION_HANDLER_NAME) != null)
             pipeline.remove(COMPRESSION_HANDLER_NAME);
+    }
+
+    public void enableEncryption(SecretKey sharedSecret) {
+        try {
+            serverChannel.pipeline().addBefore("sizer", ENCRYPTION_HANDLER_NAME, new NetworkEncryption(sharedSecret));
+            Logger.info("Enabled encryption");
+        } catch (GeneralSecurityException ex) {
+            Logger.error(ex, "Failed to enable encryption");
+        }
     }
 
     public void sendToClient(Packet packet) {
@@ -120,6 +139,11 @@ public class Session {
         if(serverChannel != null) {
             serverChannel.writeAndFlush(packet);
         }
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+        this.account = AuthenticationHandler.getInstance().getByUsername(username);
     }
 
     public Channel getClientChannel() {
@@ -136,6 +160,14 @@ public class Session {
 
     public int getCompressionThreshold() {
         return compressionThreshold;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
     public void setState(ProtocolState state) {

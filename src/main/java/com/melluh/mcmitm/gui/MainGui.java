@@ -105,6 +105,9 @@ public class MainGui extends JFrame {
         StringWriter stringWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(stringWriter));
 
+        JLabel label = new JLabel();
+        label.setText(throwable.getMessage());
+
         JTextArea text = new JTextArea();
         text.setEditable(false);
         text.setText(stringWriter.toString());
@@ -114,9 +117,12 @@ public class MainGui extends JFrame {
         text.setCaretPosition(0);
 
         JPanel panel = new JPanel();
-        panel.add(scrollPane);
+        panel.setLayout(new BorderLayout());
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE);
+        // run on another thread to prevent blocking
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE));
     }
 
     public ProxyState getProxyState() {

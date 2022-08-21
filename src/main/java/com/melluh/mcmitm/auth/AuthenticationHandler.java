@@ -113,6 +113,13 @@ public class AuthenticationHandler {
         return new File("accounts.json");
     }
 
+    public Account getByUsername(String username) {
+        return accounts.stream()
+                .filter(account -> account.getGameProfile().username().equals(username))
+                .findFirst()
+                .orElse(null);
+    }
+
     public List<Account> getAccounts() {
         return accounts;
     }

@@ -61,7 +61,7 @@ public class Utils {
 
     public static void writeJson(File file, Object object) {
         try {
-            Files.writeString(file.toPath(), JsonWriter.string(object));
+            Files.writeString(file.toPath(), JsonWriter.indent("    ").string().value(object).done());
         } catch (IOException | JsonWriterException ex) {
             Logger.error(ex, "Failed to write {}", file.getName());
         }

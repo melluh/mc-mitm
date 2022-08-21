@@ -5,9 +5,7 @@ import com.grack.nanojson.JsonObject;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +30,7 @@ public class ProtocolCodec {
         stateCodecs.put(state, codec);
     }
 
-    public List<PacketType> getPacketTypes() {
+    public List<PacketType> getAllPacketTypes() {
         return this.getStateCodecs().stream()
                 .flatMap(stateCodec -> stateCodec.getPacketTypes().stream())
                 .toList();
@@ -75,6 +73,13 @@ public class ProtocolCodec {
 
         public PacketType getPacketType(PacketDirection direction, int id) {
             return this.getPacketTypes(direction).get(id);
+        }
+
+        public PacketType getPacketType(PacketDirection direction, String name) {
+            return this.getPacketTypes(direction).stream()
+                    .filter(type -> type.getName().equals(name))
+                    .findFirst()
+                    .orElse(null);
         }
 
         private List<PacketType> getPacketTypes(PacketDirection direction) {
