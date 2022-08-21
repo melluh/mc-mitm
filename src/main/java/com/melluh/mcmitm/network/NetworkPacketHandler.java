@@ -44,6 +44,9 @@ public class NetworkPacketHandler extends SimpleChannelInboundHandler<Packet> {
                 case 2 -> session.setState(ProtocolState.LOGIN);
                 default -> throw new IllegalStateException("Invalid intention: " + intention);
             }
+
+            packet.getData().setValue("hostName", proxy.getTargetHost());
+            packet.getData().setValue("port", (short) proxy.getTargetPort());
         }
 
         if(packet.getType().getName().equals("ClientboundGameProfilePacket")) {

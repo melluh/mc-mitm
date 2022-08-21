@@ -2,7 +2,7 @@ package com.melluh.mcmitm.gui;
 
 
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
-import com.melluh.mcmitm.gui.auth.AccountsDialog;
+import com.melluh.mcmitm.gui.dialog.AccountsDialog;
 import com.melluh.mcmitm.gui.dialog.PacketFilterDialog;
 import com.melluh.mcmitm.protocol.ProtocolCodec;
 import com.melluh.mcmitm.protocol.ProtocolVersions;

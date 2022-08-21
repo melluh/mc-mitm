@@ -3,11 +3,17 @@
         "PLAY/ClientboundLevelChunkWithLightPacket",
         "PLAY/ClientboundForgetLevelChunkPacket",
         "PLAY/ClientboundKeepAlivePacket",
+        "PLAY/ClientboundPingPacket",
         "PLAY/ClientboundSetTimePacket",
+        "PLAY/ClientboundMoveEntityPacket.Pos",
+        "PLAY/ClientboundMoveEntityPacket.Rot",
+        "PLAY/ClientboundMoveEntityPacket.PosRot",
+        "PLAY/ClientboundRotateHeadPacket",
         "PLAY/ServerboundMovePlayerPacket.Pos",
         "PLAY/ServerboundMovePlayerPacket.Rot",
         "PLAY/ServerboundMovePlayerPacket.PosRot",
         "PLAY/ServerboundMovePlayerPacket.StatusOnly",
-        "PLAY/ServerboundKeepAlivePacket"
+        "PLAY/ServerboundKeepAlivePacket",
+        "PLAY/ServerboundPongPacket"
     ]
 }

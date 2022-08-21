@@ -4,7 +4,6 @@ import com.melluh.mcmitm.protocol.field.PacketField;
 import com.melluh.mcmitm.protocol.field.PacketFieldCondition;
 import com.melluh.mcmitm.protocol.field.PacketFieldList;
 import io.netty.buffer.ByteBuf;
-import org.tinylog.Logger;
 
 import java.io.IOException;
 import java.util.HashMap;
