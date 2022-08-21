@@ -11,9 +11,7 @@ repositories {
     mavenCentral()
 
     maven {
-        name 'melluh'
-        url 'https://repo.melluh.com/snapshots'
-        credentials(PasswordCredentials.class)
+        url 'https://repo.melluh.com/releases'
     }
 }
 
