@@ -4,17 +4,34 @@ import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
+import com.grack.nanojson.JsonWriter;
+import com.grack.nanojson.JsonWriterException;
 import org.tinylog.Logger;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 
 public class Utils {
 
     private Utils() {}
+
+    public static void saveDefaultFile(File file) {
+        try(InputStream in = Utils.class.getClassLoader().getResourceAsStream(file.getName())) {
+            if(in == null) {
+                Logger.error("Failed to find {} in JAR", file.getName());
+                return;
+            }
+
+            Files.copy(in, file.toPath());
+        } catch (IOException ex) {
+            Logger.error(ex, "Failed to save default {}", file.getName());
+        }
+    }
 
     public static JsonArray jsonArrayFromFile(String fileName) {
         return jsonArrayFromFile(new File(fileName));
@@ -38,7 +55,15 @@ public class Utils {
             return JsonParser.object().from(new FileReader(file));
         } catch (IOException | JsonParserException ex) {
             Logger.error(ex, "Failed to read {}", file.getName());
-            return null;
+            return new JsonObject();
+        }
+    }
+
+    public static void writeJson(File file, Object object) {
+        try {
+            Files.writeString(file.toPath(), JsonWriter.indent("    ").string().value(object).done());
+        } catch (IOException | JsonWriterException ex) {
+            Logger.error(ex, "Failed to write {}", file.getName());
         }
     }
 

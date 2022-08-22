@@ -3,10 +3,8 @@ package com.melluh.mcmitm.protocol.field;
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.melluh.mcmitm.protocol.packet.PacketData;
-import org.tinylog.Logger;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PacketFieldCondition {
 

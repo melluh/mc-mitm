@@ -12,16 +12,14 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
 
-public class ConnectionPanel extends JPanel {
+public class TopPanel extends JPanel {
 
     private final MainGui gui;
-
     private JButton startButton;
-    private ProxyState proxyState = ProxyState.IDLE;
 
-    public ConnectionPanel(MainGui gui) {
+    public TopPanel(MainGui gui) {
         this.gui = gui;
-        this.setLayout(new FlowLayout(FlowLayout.LEFT));
+        this.setLayout(new BorderLayout());
         this.addComponents();
     }
 
@@ -36,17 +34,17 @@ public class ConnectionPanel extends JPanel {
         firstRow.add(new JLabel("Target IP:"));
         JTextField targetIpField = new JTextField("127.0.0.1");
         targetIpField.setColumns(15);
-        this.add(targetIpField);
+        firstRow.add(targetIpField);
 
         firstRow.add(new MarginLabel("Target port:"));
         JTextField targetPortField = new JTextField("25565");
         targetPortField.setColumns(5);
-        this.add(targetPortField);
+        firstRow.add(targetPortField);
 
         firstRow.add(new MarginLabel("Listen port:"));
         JTextField listenPortField = new JTextField("25570");
         listenPortField.setColumns(5);
-        this.add(listenPortField);
+        firstRow.add(listenPortField);
 
         firstRow.add(new MarginLabel("Version:"));
         JComboBox<String> versionSelector = new JComboBox<>();
@@ -56,8 +54,9 @@ public class ConnectionPanel extends JPanel {
         versions.forEach(version -> versionSelector.addItem(version.getDisplayName()));
 
         this.startButton = new JButton("Start proxy");
-        this.add(startButton);
+        secondRow.add(startButton);
         startButton.addActionListener(event -> {
+            ProxyState proxyState = gui.getProxyState();
             if(proxyState == ProxyState.IDLE) {
                 String targetIp = targetIpField.getText();
                 int targetPort = Integer.parseInt(targetPortField.getText());
@@ -73,16 +72,21 @@ public class ConnectionPanel extends JPanel {
         JButton accountsButton = new JButton("Manage accounts");
         secondRow.add(accountsButton);
         accountsButton.addActionListener(event -> {
+            AccountsDialog dialog = new AccountsDialog(gui);
+            dialog.setLocationRelativeTo(gui);
+            dialog.setVisible(true);
         });
 
         JButton filterButton = new JButton("Filter packets");
         secondRow.add(filterButton);
         filterButton.addActionListener(event -> {
+            PacketFilterDialog dialog = new PacketFilterDialog(gui);
+            dialog.setLocationRelativeTo(gui);
+            dialog.setVisible(true);
         });
     }
 
     public void proxyStateChange(ProxyState state) {
-        this.proxyState = state;
         switch(state) {
             case IDLE -> startButton.setText("Start proxy");
             case RUNNING -> startButton.setText("Stop proxy");

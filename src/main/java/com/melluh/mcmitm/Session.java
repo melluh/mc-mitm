@@ -1,6 +1,9 @@
 package com.melluh.mcmitm;
 
+import com.melluh.mcmitm.auth.Account;
+import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.network.NetworkCompression;
+import com.melluh.mcmitm.network.NetworkEncryption;
 import com.melluh.mcmitm.network.NetworkPacketCodec;
 import com.melluh.mcmitm.network.NetworkPacketHandler;
 import com.melluh.mcmitm.network.NetworkPacketSizer;
@@ -15,6 +18,9 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.tinylog.Logger;
 
+import javax.crypto.SecretKey;
+import java.security.GeneralSecurityException;
+
 public class Session {
 
     private final MinecraftProxy proxy;
@@ -24,12 +30,15 @@ public class Session {
     private ProtocolState state = ProtocolState.HANDSHAKING;
     private int compressionThreshold = -1;
 
+    private String username;
+    private Account account;
+
     public Session(MinecraftProxy proxy, Channel channel) {
         this.proxy = proxy;
         this.clientChannel = channel;
     }
 
-    public void startServerConnection() {
+    public void connectServer() {
         Bootstrap bootstrap = new Bootstrap()
                 .channel(NioSocketChannel.class)
                 .group(new NioEventLoopGroup())
@@ -48,6 +57,43 @@ public class Session {
         Logger.info("Connected to server");
     }
 
+    public void disconnect() {
+        this.disconnectServer();
+        this.disconnectClient();
+    }
+
+    public void disconnectClient() {
+        if(clientChannel != null) {
+            try {
+                clientChannel.close().sync();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    public void disconnectServer() {
+        if(serverChannel != null) {
+            try {
+                serverChannel.close().sync();
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+            serverChannel = null;
+        }
+    }
+
+    private void closeChannel(Channel channel) {
+        if(channel == null)
+            return;
+
+        try {
+            channel.close().sync();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
     public void setCompressionThreshold(int compressionThreshold) {
         Logger.info("Compression threshold set to {}", compressionThreshold);
         this.compressionThreshold = compressionThreshold;
@@ -61,16 +107,28 @@ public class Session {
         }
     }
 
+    private static final String COMPRESSION_HANDLER_NAME = "compression";
+    private static final String ENCRYPTION_HANDLER_NAME = "encryption";
+
     private void addCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
-        if(pipeline.get("compression") == null)
-            pipeline.addAfter("sizer", "compression", new NetworkCompression(this));
+        if(pipeline.get(COMPRESSION_HANDLER_NAME) == null)
+            pipeline.addBefore("codec", COMPRESSION_HANDLER_NAME, new NetworkCompression(this));
     }
 
     private void removeCompression(Channel channel) {
         ChannelPipeline pipeline = channel.pipeline();
-        if(pipeline.get("compression") != null)
-            pipeline.remove("compression");
+        if(pipeline.get(COMPRESSION_HANDLER_NAME) != null)
+            pipeline.remove(COMPRESSION_HANDLER_NAME);
+    }
+
+    public void enableEncryption(SecretKey sharedSecret) {
+        try {
+            serverChannel.pipeline().addBefore("sizer", ENCRYPTION_HANDLER_NAME, new NetworkEncryption(sharedSecret));
+            Logger.info("Enabled encryption");
+        } catch (GeneralSecurityException ex) {
+            Logger.error(ex, "Failed to enable encryption");
+        }
     }
 
     public void sendToClient(Packet packet) {
@@ -81,6 +139,11 @@ public class Session {
         if(serverChannel != null) {
             serverChannel.writeAndFlush(packet);
         }
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+        this.account = AuthenticationHandler.getInstance().getByUsername(username);
     }
 
     public Channel getClientChannel() {
@@ -97,6 +160,14 @@ public class Session {
 
     public int getCompressionThreshold() {
         return compressionThreshold;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public Account getAccount() {
+        return account;
     }
 
     public void setState(ProtocolState state) {

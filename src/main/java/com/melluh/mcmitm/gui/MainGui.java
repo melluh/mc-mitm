@@ -2,34 +2,26 @@ package com.melluh.mcmitm.gui;
 
 import com.melluh.mcmitm.MinecraftProxy;
 import com.melluh.mcmitm.MinecraftProxy.ProxyState;
+import com.melluh.mcmitm.Settings;
+import com.melluh.mcmitm.auth.AuthenticationHandler;
 import com.melluh.mcmitm.protocol.ProtocolVersions;
 import com.melluh.mcmitm.protocol.packet.Packet;
 import com.melluh.mcmitm.util.Utils;
 import org.tinylog.Logger;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.MatteBorder;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class MainGui extends JFrame {
 
-    private static final String[] TABLE_COLUMNS = { "Direction", "ID", "Name", "Length" };
-    private final DefaultTableModel tableModel = new DefaultTableModel(null, TABLE_COLUMNS) {
-        @Override
-        public Class<?> getColumnClass(int columnIndex) {
-            return this.getValueAt(0, columnIndex).getClass();
-        }
+    private final FixedTableModel tableModel = new FixedTableModel("Direction", "ID", "Name", "Length");
 
-        @Override
-        public boolean isCellEditable(int row, int column) {
-            return false;
-        }
-    };
-
-    private MinecraftProxy proxy;
-    private ConnectionPanel connectionPanel;
+    private transient MinecraftProxy proxy;
+    private TopPanel topPanel;
 
     public MainGui() {
         this.setTitle("mc-mitm");
@@ -42,16 +34,31 @@ public class MainGui extends JFrame {
     private void addComponents() {
         this.setLayout(new BorderLayout());
 
-        this.connectionPanel = new ConnectionPanel(this);
-        this.add(connectionPanel, BorderLayout.PAGE_START);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        this.add(mainPanel);
+
+        this.topPanel = new TopPanel(this);
+        topPanel.setBorder(new MatteBorder(0, 0, 1, 0, Color.BLACK));
+        this.add(topPanel, BorderLayout.NORTH);
 
         JTable table = new JTable(tableModel);
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         JScrollPane scrollPane = new JScrollPane(table);
-        // Always show the vertical scroll bar
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setBorder(new MatteBorder(0, 0, 0, 1, Color.BLACK));
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         // Automatically scroll to the bottom when a new packet gets added
         scrollPane.getVerticalScrollBar().addAdjustmentListener(event -> event.getAdjustable().setValue(event.getAdjustable().getMaximum()));
-        this.add(scrollPane);
+
+        mainPanel.add(new PacketInspectionPanel(), BorderLayout.EAST);
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        TableColumnModel columnModel = table.getColumnModel();
+        columnModel.getColumn(0).setPreferredWidth(60);
+        columnModel.getColumn(1).setPreferredWidth(60);
+        columnModel.getColumn(2).setPreferredWidth(250);
+
+        mainPanel.add(new PacketInspectionPanel(), BorderLayout.EAST);
     }
 
     public void addPacket(Packet packet) {
@@ -74,14 +81,13 @@ public class MainGui extends JFrame {
             this.proxy = new MinecraftProxy(this, listenPort, targetIp, targetPort);
             proxy.onStateChange(this::proxyStateChange);
             proxy.run();
-        } catch (Throwable t) {
-            Logger.error(t, "Failed to launch");
+        } catch (Exception ex) {
+            Logger.error(ex, "Failed to launch");
         }
     }
 
     private void proxyStateChange(ProxyState state) {
-        connectionPanel.proxyStateChange(state);
-
+        topPanel.proxyStateChange(state);
         if(state == ProxyState.IDLE)
             this.proxy = null;
     }
@@ -99,6 +105,9 @@ public class MainGui extends JFrame {
         StringWriter stringWriter = new StringWriter();
         throwable.printStackTrace(new PrintWriter(stringWriter));
 
+        JLabel label = new JLabel();
+        label.setText(throwable.getMessage());
+
         JTextArea text = new JTextArea();
         text.setEditable(false);
         text.setText(stringWriter.toString());
@@ -108,9 +117,12 @@ public class MainGui extends JFrame {
         text.setCaretPosition(0);
 
         JPanel panel = new JPanel();
-        panel.add(scrollPane);
+        panel.setLayout(new BorderLayout());
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(scrollPane, BorderLayout.CENTER);
 
-        JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE);
+        // run on another thread to prevent blocking
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(this, panel, "An exception occurred", JOptionPane.ERROR_MESSAGE));
     }
 
     public ProxyState getProxyState() {
@@ -126,6 +138,8 @@ public class MainGui extends JFrame {
             Logger.error(ex, "Failed to set look and feel");
         }
 
+        Settings.getInstance().load();
+        AuthenticationHandler.getInstance().loadFromFile();
         ProtocolVersions.loadAll();
 
         instance = new MainGui();

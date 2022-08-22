@@ -5,9 +5,7 @@ import com.grack.nanojson.JsonObject;
 import org.tinylog.Logger;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,6 +30,12 @@ public class ProtocolCodec {
         stateCodecs.put(state, codec);
     }
 
+    public List<PacketType> getAllPacketTypes() {
+        return this.getStateCodecs().stream()
+                .flatMap(stateCodec -> stateCodec.getPacketTypes().stream())
+                .toList();
+    }
+
     public List<ProtocolStateCodec> getStateCodecs() {
         return stateCodecs.entrySet().stream()
                 .sorted(Entry.comparingByKey())
@@ -45,13 +49,6 @@ public class ProtocolCodec {
 
     public int getProtocolId() {
         return protocolId;
-    }
-
-    public List<PacketType> getPacketTypes() {
-        return stateCodecs.entrySet().stream()
-                .sorted(Entry.comparingByKey())
-                .flatMap(e -> e.getValue().getPacketTypes().stream())
-                .toList();
     }
 
     public static class ProtocolStateCodec {
@@ -76,6 +73,13 @@ public class ProtocolCodec {
 
         public PacketType getPacketType(PacketDirection direction, int id) {
             return this.getPacketTypes(direction).get(id);
+        }
+
+        public PacketType getPacketType(PacketDirection direction, String name) {
+            return this.getPacketTypes(direction).stream()
+                    .filter(type -> type.getName().equals(name))
+                    .findFirst()
+                    .orElse(null);
         }
 
         private List<PacketType> getPacketTypes(PacketDirection direction) {
@@ -107,7 +111,7 @@ public class ProtocolCodec {
             for(Object obj : statePacketsJson) {
                 JsonObject packetJson = (JsonObject) obj;
                 try {
-                    PacketType packetType = PacketType.create(packetJson);
+                    PacketType packetType = PacketType.create(packetJson, state);
                     stateCodec.registerPacketType(packetType);
                 } catch (Exception ex) {
                     Logger.error(ex, "Failed to initialize packet type {}", packetJson.getString("name"));

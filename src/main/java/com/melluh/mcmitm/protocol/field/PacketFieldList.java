@@ -15,6 +15,13 @@ public class PacketFieldList {
         this.fields = fields;
     }
 
+    public PacketField getField(String name) {
+        return fields.stream()
+                .filter(field -> field.getName().equals(name))
+                .findFirst()
+                .orElse(null);
+    }
+
     public List<PacketField> getFields() {
         return Collections.unmodifiableList(fields);
     }

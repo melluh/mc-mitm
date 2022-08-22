@@ -37,11 +37,13 @@ public class PacketData {
     }
 
     public void write(ByteBuf buf) throws IOException {
-        for (PacketField field : fieldList.getFields()) {
+        for(PacketField field : fieldList.getFields()) {
             Object value = this.getValue(field.getName());
-            if (value != null)
+            if(value != null)
                 field.write(buf, value);
         }
+
+        // TODO: set length for packets which were never read
     }
 
     public boolean hasParent() {
@@ -50,6 +52,12 @@ public class PacketData {
 
     public PacketData getParent() {
         return parent;
+    }
+
+    public void setValue(String name, Object value) {
+        if(fieldList.getField(name) == null)
+            throw new IllegalArgumentException("No field with name: " + name);
+        values.put(name, value);
     }
 
     public Object getValue(String name) {

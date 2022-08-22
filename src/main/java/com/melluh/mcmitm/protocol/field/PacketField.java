@@ -14,7 +14,7 @@ public abstract class PacketField {
     private final String notes;
     private final PacketFieldCondition condition;
 
-    public PacketField(FieldType type, JsonObject json) {
+    protected PacketField(FieldType type, JsonObject json) {
         this.type = type;
         this.name = json.getString("name");
         this.notes = json.getString("notes");

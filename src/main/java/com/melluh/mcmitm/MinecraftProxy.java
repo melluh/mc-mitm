@@ -7,9 +7,9 @@ import com.melluh.mcmitm.network.NetworkPacketHandler;
 import com.melluh.mcmitm.network.NetworkPacketSizer;
 import com.melluh.mcmitm.protocol.ProtocolCodec;
 import com.melluh.mcmitm.protocol.ProtocolCodec.PacketDirection;
+import com.melluh.mcmitm.protocol.ProtocolCodec.ProtocolStateCodec;
 import com.melluh.mcmitm.util.Utils;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -56,7 +56,11 @@ public class MinecraftProxy {
             stateUpdateConsumer.accept(state);
     }
 
-    public void run() throws Exception {
+    public ProxyState getState() {
+        return state;
+    }
+
+    public void run() {
         Logger.info("Starting proxy...");
         JsonObject protocolJson = Utils.jsonObjectFromFile("protocol/versions/759.json");
         this.codec = ProtocolCodec.loadFromJson(protocolJson);
@@ -94,26 +98,30 @@ public class MinecraftProxy {
                                 .addLast("handler", new NetworkPacketHandler(MinecraftProxy.this, session, PacketDirection.SERVERBOUND));
 
                         Logger.info("Session initialized: {}", ch.localAddress().getAddress().getHostAddress());
-                        session.startServerConnection();
+                        session.connectServer();
                     }
                 })
                 .option(ChannelOption.SO_BACKLOG, 128)
                 .childOption(ChannelOption.SO_KEEPALIVE, true);
 
-        ChannelFuture future = bootstrap.bind(listenPort).sync();
-        future.addListener(future1 -> {
-           if(future1.isSuccess()) {
-               this.setState(ProxyState.RUNNING);
-           } else {
-               if(future1.cause() != null) {
-                   Logger.error(future1.cause(), "Proxy failed to start");
-               } else {
-                   Logger.error("Proxy failed to start; no cause attached");
-               }
+        try {
+            ChannelFuture future = bootstrap.bind(listenPort).sync();
+            future.addListener(future1 -> {
+                if(future1.isSuccess()) {
+                    this.setState(ProxyState.RUNNING);
+                } else {
+                    if(future1.cause() != null) {
+                        Logger.error(future1.cause(), "Proxy failed to start");
+                    } else {
+                        Logger.error("Proxy failed to start; no cause attached");
+                    }
 
-               this.setState(ProxyState.IDLE);
-           }
-        });
+                    this.setState(ProxyState.IDLE);
+                }
+            });
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void stop() {
@@ -121,6 +129,8 @@ public class MinecraftProxy {
             group.shutdownGracefully();
             group = null;
         }
+
+        sessions.forEach(Session::disconnectServer);
         this.setState(ProxyState.IDLE);
     }
 

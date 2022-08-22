@@ -9,6 +9,10 @@ version '1.0.0-SNAPSHOT'
 
 repositories {
     mavenCentral()
+
+    maven {
+        url 'https://repo.melluh.com/releases'
+    }
 }
 
 dependencies {
@@ -17,6 +21,7 @@ dependencies {
     implementation 'org.tinylog:tinylog-impl:2.4.1'
     implementation 'com.grack:nanojson:1.7'
     implementation 'dev.dewy:nbt:1.5.1'
+    implementation 'com.melluh:mcauth:1.0.0'
 }
 
 jar {
